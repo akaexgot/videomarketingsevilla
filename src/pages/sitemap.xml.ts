@@ -1,5 +1,8 @@
 import type { APIRoute } from 'astro';
 import { getProjects, getServices, getSectors } from '../lib/data';
+import { getSiteUrl } from '../lib/seo';
+
+export const prerender = false;
 
 type SitemapPage = {
     url: string;
@@ -26,10 +29,6 @@ const staticPages: SitemapPage[] = [
     { url: '/cookies', priority: '0.3', changefreq: 'yearly' },
 ];
 
-function getSiteUrl() {
-    return (import.meta.env.PUBLIC_SITE_URL || 'https://videomarketingsevilla.com').replace(/\/+$/, '');
-}
-
 function escapeXml(value: string) {
     return value
         .replace(/&/g, '&amp;')
@@ -39,11 +38,11 @@ function escapeXml(value: string) {
         .replace(/'/g, '&apos;');
 }
 
-function formatDate(value: string | null | undefined, fallback: string) {
-    if (!value) return fallback;
+function formatDate(value: string | null | undefined) {
+    if (!value) return null;
 
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return fallback;
+    if (Number.isNaN(date.getTime())) return null;
 
     return date.toISOString().split('T')[0];
 }
@@ -61,13 +60,16 @@ function dynamicPages(items: SluggedPage[], basePath: string, priority: string):
 
 export const GET: APIRoute = async () => {
     const site = getSiteUrl();
-    const today = new Date().toISOString().split('T')[0];
 
-    const [projects, services, sectors] = await Promise.all([
+    const [projectsResult, servicesResult, sectorsResult] = await Promise.allSettled([
         getProjects(),
         getServices(),
         getSectors(),
     ]);
+
+    const projects = projectsResult.status === 'fulfilled' ? projectsResult.value : [];
+    const services = servicesResult.status === 'fulfilled' ? servicesResult.value : [];
+    const sectors = sectorsResult.status === 'fulfilled' ? sectorsResult.value : [];
 
     const allPages: SitemapPage[] = [
         ...staticPages,
@@ -75,24 +77,29 @@ export const GET: APIRoute = async () => {
         ...dynamicPages(services, '/servicios', '0.8'),
         ...dynamicPages(sectors, '/sectores', '0.8'),
     ];
+    const uniquePages = Array.from(new Map(allPages.map((page) => [page.url, page])).values());
 
     const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${allPages
-    .map((page) => `  <url>
-    <loc>${escapeXml(`${site}${page.url}`)}</loc>
-    <lastmod>${formatDate(page.lastmod, today)}</lastmod>
+${uniquePages
+    .map((page) => {
+        const lastmod = formatDate(page.lastmod);
+        return `  <url>
+    <loc>${escapeXml(new URL(page.url, `${site}/`).href)}</loc>${lastmod ? `
+    <lastmod>${lastmod}</lastmod>` : ''}
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
-  </url>`)
+  </url>`;
+    })
     .join('\n')}
 </urlset>`;
 
     return new Response(body, {
         status: 200,
         headers: {
-            'Content-Type': 'application/xml; charset=utf-8',
+            'Content-Type': 'text/xml; charset=UTF-8',
             'Cache-Control': 'public, max-age=0, s-maxage=3600',
+            'X-Content-Type-Options': 'nosniff',
         },
     });
 };

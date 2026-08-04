@@ -401,11 +401,17 @@ const structuredData = [
     .pj-video__full-player.is-playing {
         opacity: 1; pointer-events: all;
     }
+    .pj-video__full-player.is-ready-mobile {
+        opacity: 1; pointer-events: all;
+    }
 
     /* When playing, hide overlay and content */
     .pj-detail__video-screen.is-playing .pj-video__overlay,
     .pj-detail__video-screen.is-playing .pj-video__content,
-    .pj-detail__video-screen.is-playing .pj-video__click-area {
+    .pj-detail__video-screen.is-playing .pj-video__click-area,
+    .pj-detail__video-screen.is-mobile-ready .pj-video__overlay,
+    .pj-detail__video-screen.is-mobile-ready .pj-video__content,
+    .pj-detail__video-screen.is-mobile-ready .pj-video__click-area {
         opacity: 0; pointer-events: none;
     }
 
@@ -468,13 +474,13 @@ const structuredData = [
         const sections = Array.from(document.querySelectorAll('.pj-detail__screen, #site-footer'));
         if (sections.length === 0) return;
 
-        // Solo activar scroll snap en escritorio (>1024px)
-        if (window.innerWidth <= 1024) return;
+        const enableFullpageScroll = false;
 
-        let isScrolling = false;
-        let scrollTimeout: ReturnType<typeof setTimeout>;
+        if (enableFullpageScroll && window.innerWidth > 1024) {
+            let isScrolling = false;
+            let scrollTimeout: ReturnType<typeof setTimeout>;
 
-        function getVisibleSectionIndex() {
+            function getVisibleSectionIndex() {
             let maxIdx = 0, maxArea = 0;
             sections.forEach((sec, idx) => {
                 const r = sec.getBoundingClientRect();
@@ -483,7 +489,7 @@ const structuredData = [
             });
             return maxIdx;
         }
-        function scrollToSection(index: number) {
+            function scrollToSection(index: number) {
             if (index < 0 || index >= sections.length || isScrolling) return;
             isScrolling = true;
             sections[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -493,17 +499,17 @@ const structuredData = [
             }, 1300);
         }
 
-        window.addEventListener('wheel', (e) => {
+            window.addEventListener('wheel', (e) => {
             e.preventDefault();
             if (isScrolling) return;
             const cur = getVisibleSectionIndex();
             scrollToSection(e.deltaY > 0 ? cur + 1 : cur - 1);
         }, { passive: false });
 
-        let touchStartY = 0;
-        window.addEventListener('touchstart', (e) => { touchStartY = e.changedTouches[0].screenY; }, { passive: false });
-        window.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
-        window.addEventListener('touchend', (e) => {
+            let touchStartY = 0;
+            window.addEventListener('touchstart', (e) => { touchStartY = e.changedTouches[0].screenY; }, { passive: false });
+            window.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
+            window.addEventListener('touchend', (e) => {
             if (isScrolling) return;
             const delta = touchStartY - e.changedTouches[0].screenY;
             const cur = getVisibleSectionIndex();
@@ -511,7 +517,7 @@ const structuredData = [
             else if (delta < -50) scrollToSection(cur - 1);
         }, { passive: false });
 
-        window.addEventListener('keydown', (e) => {
+            window.addEventListener('keydown', (e) => {
             const keys = ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '];
             if (keys.includes(e.key)) {
                 e.preventDefault();
@@ -522,7 +528,8 @@ const structuredData = [
                 else if (e.key === 'Home') scrollToSection(0);
                 else if (e.key === 'End') scrollToSection(sections.length - 1);
             }
-        }, { passive: false });
+            }, { passive: false });
+        }
 
         /* ── Stop videos helper ── */
         function stopVideoInContainer(container: HTMLElement) {
@@ -569,6 +576,34 @@ const structuredData = [
         const clickArea = document.getElementById('pjVideoClickArea');
         const fullPlayer = document.getElementById('pjFullPlayer') as HTMLElement;
         const videoScreen = document.getElementById('pj-video');
+        const shouldShowInlinePlayer = window.matchMedia('(max-width: 767px)').matches;
+
+        function srcWithoutAutoplay(src: string) {
+            try {
+                const url = new URL(src);
+                url.searchParams.delete('autoplay');
+                return url.toString();
+            } catch {
+                return src.replace(/([?&])autoplay=1&?/, '$1').replace(/[?&]$/, '');
+            }
+        }
+
+        if (shouldShowInlinePlayer && fullPlayer && videoScreen) {
+            if (fullPlayer.tagName === 'IFRAME') {
+                const iframe = fullPlayer as HTMLIFrameElement;
+                if (iframe.dataset.src) {
+                    iframe.src = srcWithoutAutoplay(iframe.dataset.src);
+                }
+            } else if (fullPlayer.tagName === 'VIDEO') {
+                const video = fullPlayer as HTMLVideoElement;
+                if (!video.src && video.dataset.src) {
+                    video.src = video.dataset.src;
+                }
+                video.preload = 'metadata';
+            }
+            fullPlayer.classList.add('is-ready-mobile');
+            videoScreen.classList.add('is-mobile-ready');
+        }
 
         const playMainVideo = () => {
             // Stop hero video before playing main

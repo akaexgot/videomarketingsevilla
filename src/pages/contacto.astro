@@ -463,6 +463,10 @@ const sharedHeroVideoId = !sharedHeroVideoIsNative ? extractYouTubeId(sharedHero
         });
     }
 
+    document.querySelector('.js-scroll-form')?.addEventListener('click', () => {
+        document.querySelector('.contact-body')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
     // Start chat
     chatStartBtn.addEventListener('click', () => {
         const name = chatNameInput.value.trim();
@@ -584,6 +588,8 @@ const sharedHeroVideoId = !sharedHeroVideoIsNative ? extractYouTubeId(sharedHero
 <script>
     /* ── Fullpage Scroll Effect ── */
     document.addEventListener('DOMContentLoaded', () => {
+        return;
+
         const sections = Array.from(document.querySelectorAll('section'));
         if (sections.length === 0) return;
 

@@ -56,25 +56,30 @@ export const POST: APIRoute = async ({ request }) => {
             });
         }
 
+        const notificationTasks: Promise<unknown>[] = [];
+
+        const { sendOwnerNotification } = await import('../../lib/notifications');
+        notificationTasks.push(sendOwnerNotification(
+            `Nuevo Lead: ${name}`,
+            `Mensaje de ${name} (${email}).\nTel: ${phone || 'N/D'}\n${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`
+        ));
+
         // Send email notifications (if Resend is configured)
         if (import.meta.env.RESEND_API_KEY) {
             const { getSettings } = await import('../../lib/data');
             const settings = await getSettings();
             const { sendContactNotification, sendContactAutoReply } = await import('../../lib/resend');
-            const { sendOwnerNotification } = await import('../../lib/notifications');
             
-            await Promise.allSettled([
+            notificationTasks.push(
                 sendContactNotification({ 
                     name, email, phone, company, message, 
                     adminEmail: settings.email 
                 }),
-                sendContactAutoReply({ name, email, phone, company, message }),
-                sendOwnerNotification(
-                    `Nuevo Lead: ${name}`,
-                    `Mensaje de ${name} (${email}).\nTel: ${phone || 'N/D'}\n${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`
-                )
-            ]);
+                sendContactAutoReply({ name, email, phone, company, message })
+            );
         }
+
+        await Promise.allSettled(notificationTasks);
 
         return new Response(JSON.stringify({ success: true }), {
             status: 200,

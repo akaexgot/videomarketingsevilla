@@ -183,6 +183,11 @@ export const POST: APIRoute = async ({ request, clientAddress, cookies }) => {
             .single();
 
         if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        const { sendOwnerNotification } = await import('../../lib/notifications');
+        await sendOwnerNotification(
+            `Nuevo chat web: ${visitor_name || 'Visitante'}`,
+            'Un visitante acaba de iniciar un chat en videomarketingsevilla.com.'
+        );
         return new Response(JSON.stringify({ conversation_id: data.id }), { status: 201 });
     }
 
@@ -245,6 +250,14 @@ export const POST: APIRoute = async ({ request, clientAddress, cookies }) => {
                     message: "¡Hola! Gracias por contactar con VideoMarketing Sevilla. Enseguida te atenderemos." 
                 });
             }
+        }
+
+        if (sender_type === 'visitor') {
+            const { sendOwnerNotification } = await import('../../lib/notifications');
+            await sendOwnerNotification(
+                `Mensaje de chat: ${convCheck.visitor_name || 'Visitante'}`,
+                message.substring(0, 250)
+            );
         }
 
         return new Response(JSON.stringify(data), { status: 201 });

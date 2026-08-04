@@ -7,4 +7,5 @@ Disallow: /portal-clientes
 Disallow: /contrato/
 Disallow: /carta/
 
+Sitemap: https://videomarketingsevilla.com/sitemap-index.xml
 Sitemap: https://videomarketingsevilla.com/sitemap.xml
