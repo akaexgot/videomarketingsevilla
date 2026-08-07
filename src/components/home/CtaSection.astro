@@ -52,6 +52,8 @@ const settings = await getSettings();
       <a
         href={`https://wa.me/${settings.whatsapp_number?.replace(/[^0-9]/g, '')}?text=Hola,%20me%20gustaría%20hablar%20sobre%20un%20proyecto%20audiovisual.`}
         target="_blank" rel="noopener"
+        data-ga-event="click_whatsapp"
+        data-ga-method="whatsapp"
         class="cta-btn cta-btn--wa group"
       >
         <svg class="cta-btn__wa-icon" fill="currentColor" viewBox="0 0 24 24">

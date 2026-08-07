@@ -49,6 +49,21 @@ window.vmGoogleConsent = {
     try { window.localStorage.setItem('vm_google_consent', 'denied'); } catch (error) {}
   }
 };
+window.vmTrackEvent = function(eventName, params) {
+  if (typeof window.gtag !== 'function') return false;
+  window.gtag('event', eventName, params || {});
+  return true;
+};
+document.addEventListener('click', function(event) {
+  var target = event.target instanceof Element ? event.target.closest('[data-ga-event]') : null;
+  if (!target) return;
+  var eventName = target.getAttribute('data-ga-event');
+  if (!eventName) return;
+  window.vmTrackEvent(eventName, {
+    method: target.getAttribute('data-ga-method') || undefined,
+    link_url: target.getAttribute('href') || undefined
+  });
+});
 `;
 
 const gtmScript = `
