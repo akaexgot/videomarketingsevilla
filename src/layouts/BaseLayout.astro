@@ -5,6 +5,7 @@
  */
 import Head from "../components/seo/Head.astro";
 import GoogleTracking from "../components/seo/GoogleTracking.astro";
+import CookieConsent from "../components/seo/CookieConsent.astro";
 import Navbar from "../components/ui/Navbar.astro";
 import Footer from "../components/ui/Footer.astro";
 import MobileBottomBar from "../components/ui/MobileBottomBar.astro";
@@ -53,6 +54,7 @@ const { title, description, image, imageAlt, url, type, noindex, structuredData 
         <Footer />
         <MobileBottomBar />
         <ProjectModal />
+        <CookieConsent />
 
         <!-- Scroll Reveal Observer -->
         <script>

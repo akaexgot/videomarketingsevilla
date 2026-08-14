@@ -18,7 +18,7 @@ const settings = await getSettings();
                 <div
                     class="prose prose-invert prose-sm text-light-muted leading-relaxed space-y-6"
                 >
-                    <p>Última actualización: Marzo 2024</p>
+                    <p>Última actualización: Agosto 2026</p>
 
                     <h2
                         class="text-xl font-[Outfit] font-semibold text-white mt-8"
@@ -38,12 +38,19 @@ const settings = await getSettings();
                     </h2>
                     <p>
                         <strong class="text-white">Cookies técnicas:</strong> Necesarias
-                        para el funcionamiento del sitio web.
+                        para el funcionamiento del sitio web, la seguridad, formularios
+                        y preferencias básicas.
                     </p>
                     <p>
                         <strong class="text-white">Cookies analíticas:</strong> Nos
                         ayudan a entender cómo los usuarios interactúan con el sitio
-                        web.
+                        web mediante Google Analytics 4.
+                    </p>
+                    <p>
+                        <strong class="text-white">Cookies publicitarias:</strong> Permiten
+                        medición publicitaria, datos de usuario para anuncios y
+                        personalización publicitaria en servicios de Google cuando el
+                        usuario las acepta.
                     </p>
 
                     <h2
@@ -52,9 +59,15 @@ const settings = await getSettings();
                         3. Gestión de cookies
                     </h2>
                     <p>
-                        Puedes configurar tu navegador para bloquear o eliminar
-                        cookies. Ten en cuenta que esto puede afectar la
-                        funcionalidad del sitio.
+                        Puedes aceptar todas, rechazarlas o configurar tus preferencias
+                        desde nuestro panel de consentimiento. La web inicia Google
+                        Consent Mode v2 en estado denegado para analítica y publicidad,
+                        y actualiza el consentimiento después de tu elección.
+                    </p>
+                    <p>
+                        <button type="button" class="btn btn-primary" id="open-cookie-preferences">
+                            Configurar cookies
+                        </button>
                     </p>
 
                     <h2
@@ -70,4 +83,12 @@ const settings = await getSettings();
             </div>
         </div>
     </section>
+
+    <script>
+        document.getElementById("open-cookie-preferences")?.addEventListener("click", () => {
+            if (typeof (window as any).vmOpenCookiePreferences === "function") {
+                (window as any).vmOpenCookiePreferences();
+            }
+        });
+    </script>
 </BaseLayout>

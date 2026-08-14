@@ -144,7 +144,7 @@ function fieldState(value: string) {
 
         <div class="seo-google-notes">
             <p><strong>Base instalada:</strong> si configuras GTM se carga solo Tag Manager; si no hay GTM se carga Google tag directo con GA4 y/o Ads.</p>
-            <p><strong>Consent Mode:</strong> arranca en denegado y expone <code>window.vmGoogleConsent.acceptAll()</code> para conectarlo a un banner de cookies.</p>
+            <p><strong>Consent Mode:</strong> arranca en denegado y la CMP publica actualizaciones para <code>analytics_storage</code>, <code>ad_storage</code>, <code>ad_user_data</code> y <code>ad_personalization</code>.</p>
             <p><strong>Conversiones:</strong> queda preparado el helper, pero no se dispara ningun evento hasta confirmar que acciones cuentan como conversion.</p>
             {!adsIdLooksValid && <p class="seo-warning">El ID de Google Ads normalmente debe tener formato AW-XXXXXXXXXX.</p>}
         </div>

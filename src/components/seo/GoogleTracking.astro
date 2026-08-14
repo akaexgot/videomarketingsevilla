@@ -30,23 +30,88 @@ const consentBootstrap = `
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 window.gtag = window.gtag || gtag;
+var vmGrantedConsent = ${JSON.stringify(grantedConsent)};
+var vmDeniedConsent = ${JSON.stringify(deniedConsent)};
+function vmNormalizeConsent(value) {
+  if (value === 'granted') {
+    return Object.assign({}, vmGrantedConsent);
+  }
+  if (value === 'denied') {
+    return Object.assign({}, vmDeniedConsent);
+  }
+  try {
+    var parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    if (!parsed || typeof parsed !== 'object') return null;
+    var analyticsGranted = parsed.analytics === true || parsed.analytics_storage === 'granted';
+    var adsGranted = parsed.marketing === true || parsed.ads === true || parsed.ad_storage === 'granted';
+    return {
+      analytics_storage: analyticsGranted ? 'granted' : 'denied',
+      ad_storage: adsGranted ? 'granted' : 'denied',
+      ad_user_data: adsGranted ? 'granted' : 'denied',
+      ad_personalization: adsGranted ? 'granted' : 'denied'
+    };
+  } catch (error) {
+    return null;
+  }
+}
+function vmStoreConsent(consentState, preferences) {
+  try {
+    var analyticsGranted = consentState.analytics_storage === 'granted';
+    var adsGranted = consentState.ad_storage === 'granted';
+    window.localStorage.setItem('vm_google_consent', JSON.stringify(Object.assign({
+      version: 2,
+      analytics: analyticsGranted,
+      marketing: adsGranted,
+      updatedAt: new Date().toISOString()
+    }, preferences || {})));
+  } catch (error) {}
+}
+function vmConsentForUpdate(consentState) {
+  var state = Object.assign({}, consentState);
+  delete state.wait_for_update;
+  return state;
+}
+function vmUpdateConsent(consentState, preferences) {
+  var normalized = vmNormalizeConsent(consentState) || Object.assign({}, vmDeniedConsent);
+  var updateState = vmConsentForUpdate(normalized);
+  gtag('consent', 'update', updateState);
+  vmStoreConsent(updateState, preferences);
+  try {
+    window.dispatchEvent(new CustomEvent('vm-google-consent-updated', { detail: updateState }));
+  } catch (error) {}
+  return updateState;
+}
 gtag('consent', 'default', ${JSON.stringify(deniedConsent)});
 try {
   var storedGoogleConsent = window.localStorage.getItem('vm_google_consent');
-  if (storedGoogleConsent === 'granted') {
-    gtag('consent', 'update', ${JSON.stringify(grantedConsent)});
-  } else if (storedGoogleConsent === 'denied') {
-    gtag('consent', 'update', ${JSON.stringify(deniedConsent)});
+  var storedConsentState = vmNormalizeConsent(storedGoogleConsent);
+  if (storedConsentState) {
+    gtag('consent', 'update', vmConsentForUpdate(storedConsentState));
   }
 } catch (error) {}
 window.vmGoogleConsent = {
   acceptAll: function() {
-    gtag('consent', 'update', ${JSON.stringify(grantedConsent)});
-    try { window.localStorage.setItem('vm_google_consent', 'granted'); } catch (error) {}
+    return vmUpdateConsent(vmGrantedConsent, { source: 'accept_all' });
   },
   denyAll: function() {
-    gtag('consent', 'update', ${JSON.stringify(deniedConsent)});
-    try { window.localStorage.setItem('vm_google_consent', 'denied'); } catch (error) {}
+    return vmUpdateConsent(vmDeniedConsent, { source: 'reject_all' });
+  },
+  update: function(preferences) {
+    var analyticsGranted = Boolean(preferences && preferences.analytics);
+    var marketingGranted = Boolean(preferences && preferences.marketing);
+    return vmUpdateConsent({
+      analytics_storage: analyticsGranted ? 'granted' : 'denied',
+      ad_storage: marketingGranted ? 'granted' : 'denied',
+      ad_user_data: marketingGranted ? 'granted' : 'denied',
+      ad_personalization: marketingGranted ? 'granted' : 'denied'
+    }, Object.assign({ source: 'preferences' }, preferences || {}));
+  },
+  getStored: function() {
+    try {
+      return vmNormalizeConsent(window.localStorage.getItem('vm_google_consent'));
+    } catch (error) {
+      return null;
+    }
   }
 };
 window.vmTrackEvent = function(eventName, params) {
