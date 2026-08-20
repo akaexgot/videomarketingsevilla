@@ -319,6 +319,39 @@ function syncColor(pickerId: string, inputId: string) {
         syncColor('secondary_color_picker', 'secondary_color_input');
 
         // Video Upload Logic
+        async function uploadVideoToCloudinary(file: File, folder: string) {
+            const timestamp = Math.round(Date.now() / 1000);
+            const signRes = await fetch('/api/admin/cloudinary-sign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ folder, timestamp })
+            });
+
+            const signData = await signRes.json().catch(() => null);
+            if (!signRes.ok || !signData?.signature || !signData?.api_key || !signData?.cloud_name) {
+                throw new Error(signData?.error || 'No se pudo preparar la subida a Cloudinary.');
+            }
+
+            const cloudinaryFormData = new FormData();
+            cloudinaryFormData.append('file', file);
+            cloudinaryFormData.append('folder', folder);
+            cloudinaryFormData.append('timestamp', String(timestamp));
+            cloudinaryFormData.append('api_key', signData.api_key);
+            cloudinaryFormData.append('signature', signData.signature);
+
+            const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${signData.cloud_name}/auto/upload`, {
+                method: 'POST',
+                body: cloudinaryFormData
+            });
+
+            const uploadData = await uploadRes.json().catch(() => null);
+            if (!uploadRes.ok || !uploadData?.secure_url) {
+                throw new Error(uploadData?.error?.message || `Cloudinary rechazo la subida (${uploadRes.status}).`);
+            }
+
+            return uploadData;
+        }
+
         async function setupVideoUpload(inputId: string, fileInputId: string, loadingId: string) {
             const fileInput = document.getElementById(fileInputId) as HTMLInputElement;
             const urlInput = document.getElementById(inputId) as HTMLInputElement;
@@ -334,28 +367,15 @@ function syncColor(pickerId: string, inputId: string) {
                 loading.classList.add('flex');
 
                 try {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('folder', 'background_videos');
+                    const data = await uploadVideoToCloudinary(file, 'background_videos');
+                    urlInput.value = data.secure_url;
+                    updateVideoPreview(urlInput.id, data.secure_url);
 
-                    const res = await fetch('/api/admin/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        urlInput.value = data.url;
-                        updateVideoPreview(urlInput.id, data.url);
-                        
-                        const saveBtn = document.getElementById('btn-save-all');
-                        if (saveBtn) (saveBtn as HTMLButtonElement).click();
-                    } else {
-                        const err = await res.json();
-                        alert('Error: ' + (err.error || 'Fallo al subir'));
-                    }
+                    const saveBtn = document.getElementById('btn-save-all');
+                    if (saveBtn) (saveBtn as HTMLButtonElement).click();
                 } catch (error) {
-                    alert('Error de red al subir vídeo');
+                    const message = error instanceof Error ? error.message : 'Error de red al subir video';
+                    alert(message);
                 } finally {
                     loading.classList.add('hidden');
                     loading.classList.remove('flex');

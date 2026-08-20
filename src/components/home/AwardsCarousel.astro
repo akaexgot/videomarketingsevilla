@@ -1,16 +1,22 @@
 ---
 /**
- * Awards — Clean Infinite Marquee with award logos
+ * Awards - Clean Infinite Marquee with award and verification logos
  */
 import { getAwards } from "../../lib/data";
 import { optimizeCloudinaryImage } from "../../lib/cloudinary";
-const awards = await getAwards();
 
-// If no awards, don't render or show a placeholder?
-// User wants it to be exactly like CompaniesCarousel.
+const awards = await getAwards();
+const verificationBadges = [
+    { type: "zaask", name: "Zaask profesional desde", website: "https://www.zaask.es/usuario/videomarketingsevilla" },
+    { type: "cronoshare", name: "Cronoshare profesional desde 2026", website: "https://www.cronoshare.com/croner-5588245-video-marketing-sevilla" },
+];
+const carouselItems = [
+    ...awards.map((award: any) => ({ type: "award", award })),
+    ...verificationBadges,
+];
 ---
 
-{awards.length > 0 && (
+{carouselItems.length > 0 && (
 <div
     id="awards-section"
     class="bg-white border-b border-black/5 relative overflow-hidden z-10 awards-carousel-wrap h-[10vh] flex items-center"
@@ -18,34 +24,80 @@ const awards = await getAwards();
     <div class="overflow-hidden w-full">
         <div class="marquee-track flex items-center gap-10 lg:gap-20">
             {
-                [...awards, ...awards, ...awards, ...awards].map(
-                    (award: any) => (
-                        <div class="flex items-center justify-center min-w-[200px] lg:min-w-[300px] flex-shrink-0">
-                            {award.website ? (
-                                <a 
-                                    href={award.website} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    class="block transition-all duration-500"
-                                    title={`Ver premio ${award.name}`}
-                                >
-                                    <img
-                                        src={optimizeCloudinaryImage(award.image_url, 150)}
-                                        alt={award.name}
-                                        class="h-10 lg:h-16 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500 object-contain"
-                                        loading="lazy"
-                                        decoding="async"
-                                    />
-                                </a>
-                            ) : (
-                                <img
-                                    src={optimizeCloudinaryImage(award.image_url, 150)}
-                                    alt={award.name}
-                                    class="h-10 lg:h-16 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500 object-contain"
-                                />
-                            )}
-                        </div>
-                    )
+                [...carouselItems, ...carouselItems, ...carouselItems, ...carouselItems].map(
+                    (item: any, index: number) => {
+                        const arcId = `crono-arc-${index}`;
+
+                        return (
+                            <div class="flex items-center justify-center min-w-[200px] lg:min-w-[300px] flex-shrink-0">
+                                {item.type === "award" ? (
+                                    item.award.website ? (
+                                        <a
+                                            href={item.award.website}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="block transition-all duration-500"
+                                            title={`Ver premio ${item.award.name}`}
+                                        >
+                                            <img
+                                                src={optimizeCloudinaryImage(item.award.image_url, 150)}
+                                                alt={item.award.name}
+                                                class="h-10 lg:h-16 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500 object-contain"
+                                                loading="lazy"
+                                                decoding="async"
+                                            />
+                                        </a>
+                                    ) : (
+                                        <img
+                                            src={optimizeCloudinaryImage(item.award.image_url, 150)}
+                                            alt={item.award.name}
+                                            class="h-10 lg:h-16 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500 object-contain"
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
+                                    )
+                                ) : item.type === "zaask" ? (
+                                    <a
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        href={item.website}
+                                        title="Ver perfil de VideoMarketing Sevilla en Zaask"
+                                        class="block transition-all duration-500"
+                                    >
+                                        <img
+                                            src="https://www.zaask.es/widget?user=655769&widget=pro-since"
+                                            alt="VideoMarketing Sevilla verificado en Zaask"
+                                            class="h-10 lg:h-16 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500 object-contain"
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
+                                    </a>
+                                ) : (
+                                    <a
+                                        href={item.website}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="Mira el perfil de Video Marketing Sevilla en Cronoshare"
+                                        class="block w-10 h-10 lg:w-14 lg:h-14 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500"
+                                    >
+                                        <svg viewBox="0 0 100 100" class="w-full h-full">
+                                            <defs>
+                                                <path id={arcId} d="M11 50 A 39 39 0 0 0 89 50"></path>
+                                            </defs>
+                                            <circle cx="50%" cy="50%" r="50%" fill="#49abe8"></circle>
+                                            <circle cx="50%" cy="50%" r="43%" stroke="#ffffff" stroke-width="1.2%" fill-opacity="0"></circle>
+                                            <image width="80%" x="10%" y="35%" href="https://www.cronoshare.com/assets/badges/logo-white-c222fc5c75f7d53b680cfe6d261441b8.svg"></image>
+                                            <image width="90%" x="5%" y="2%" href="https://www.cronoshare.com/assets/badges/favicon-white-3a4f90933fc25f13b321271f8d8861c3.svg"></image>
+                                            <text text-anchor="middle" x="50%" y="60%" fill="#ffffff" font-family="Calibri" font-size="70%" font-weight="bold">PROFESIONAL</text>
+                                            <text fill="#ffffff" font-family="Calibri" font-size="70%" font-weight="bold" text-anchor="middle">
+                                                <textPath href={`#${arcId}`} startOffset="50%">DESDE 2026</textPath>
+                                            </text>
+                                        </svg>
+                                    </a>
+                                )}
+                            </div>
+                        );
+                    }
                 )
             }
         </div>

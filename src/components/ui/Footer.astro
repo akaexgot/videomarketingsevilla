@@ -80,7 +80,7 @@ const footerData = await getFooterData();
                             <p class="f-section-label">Contacto</p>
                             <div class="f-info-items">
                                 <a href={`mailto:${settings.email}`} class="f-info-link">{settings.email}</a>
-                                <a href={`tel:${settings.phone}`} data-ga-event="click_phone" data-ga-method="phone" class="f-info-link">{settings.phone}</a>
+                                <a href={`tel:${settings.phone}`} data-ga-event="phone_click" data-ga-method="phone" class="f-info-link">{settings.phone}</a>
                                 <span class="f-info-muted">{settings.address}</span>
                             </div>
                         </div>

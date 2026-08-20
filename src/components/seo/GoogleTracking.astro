@@ -120,13 +120,31 @@ window.vmTrackEvent = function(eventName, params) {
   return true;
 };
 document.addEventListener('click', function(event) {
-  var target = event.target instanceof Element ? event.target.closest('[data-ga-event]') : null;
+  var target = event.target instanceof Element ? event.target.closest('a[href], [data-ga-event]') : null;
   if (!target) return;
-  var eventName = target.getAttribute('data-ga-event');
+  var href = target.getAttribute('href') || '';
+  var explicitEventName = target.getAttribute('data-ga-event');
+  var normalizedHref = href.toLowerCase();
+  var eventName = explicitEventName;
+
+  if (normalizedHref.indexOf('tel:') === 0) {
+    eventName = 'phone_click';
+  } else if (normalizedHref.indexOf('mailto:') === 0) {
+    eventName = 'email_click';
+  } else if (
+    normalizedHref.indexOf('https://wa.me/') === 0 ||
+    normalizedHref.indexOf('http://wa.me/') === 0 ||
+    normalizedHref.indexOf('https://api.whatsapp.com/') === 0 ||
+    normalizedHref.indexOf('http://api.whatsapp.com/') === 0 ||
+    normalizedHref.indexOf('whatsapp://') === 0
+  ) {
+    eventName = 'whatsapp_click';
+  }
+
   if (!eventName) return;
   window.vmTrackEvent(eventName, {
     method: target.getAttribute('data-ga-method') || undefined,
-    link_url: target.getAttribute('href') || undefined
+    link_url: href || undefined
   });
 });
 `;
