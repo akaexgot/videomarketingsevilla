@@ -1,11 +1,10 @@
 ---
 /**
- * Contacto Page — Premium redesign + Chat Widget
+ * Contacto Page — Premium redesign
  */
 import BaseLayout from "../layouts/BaseLayout.astro";
 import FaqsSection from "../components/home/FaqsSection.astro";
 import "../styles/contacto.css";
-import "../styles/contacto-chat.css";
 import { getSettings } from "../lib/data";
 import { createCaptchaChallenge } from "../lib/captcha";
 import { buildBreadcrumbSchema, getSiteUrl } from "../lib/seo";
@@ -40,6 +39,7 @@ const sharedHeroVideoIsNative = sharedHeroVideoUrl && (
     sharedHeroVideoUrl.endsWith('.webm')
 );
 const sharedHeroVideoId = !sharedHeroVideoIsNative ? extractYouTubeId(sharedHeroVideoUrl) : null;
+const whatsappHref = `https://wa.me/${settings.whatsapp_number?.replace(/[^0-9]/g, '')}?text=Hola,%20me%20gustaria%20saber%20mas%20sobre%20vuestros%20servicios%20de%20video%20marketing.`;
 ---
 
 <BaseLayout
@@ -93,12 +93,13 @@ const sharedHeroVideoId = !sharedHeroVideoIsNative ? extractYouTubeId(sharedHero
                 </p>
 
                 <div class="contact-hero__buttons" style="justify-content: center;">
-                    <button type="button" class="contact-hero__btn contact-hero__btn--primary js-open-chat" style="background: #e11d48; color: white; border: none; box-shadow: 0 4px 6px -1px rgba(225, 29, 72, 0.4);">
-                        <svg fill="none" class="w-5 h-5 mr-2" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    <a href={whatsappHref} target="_blank" rel="noopener" data-ga-event="whatsapp_click" data-ga-method="contact_hero_whatsapp" class="contact-hero__btn contact-hero__btn--primary" style="background: #e11d48; color: white; border: none; box-shadow: 0 4px 6px -1px rgba(225, 29, 72, 0.4);">
+                        <svg fill="currentColor" class="w-5 h-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35z"/>
+                            <path d="M12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 005.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89A11.82 11.82 0 0012.05 0zm0 21.79h-.01a9.87 9.87 0 01-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 01-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 012.89 6.99c0 5.45-4.44 9.88-9.88 9.88z"/>
                         </svg>
-                        Hablar en tiempo real
-                    </button>
+                        WhatsApp directo
+                    </a>
                     <button type="button" class="contact-hero__btn contact-hero__btn--secondary js-scroll-form" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
                         <svg fill="none" class="w-5 h-5 mr-2" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
@@ -128,13 +129,13 @@ const sharedHeroVideoId = !sharedHeroVideoIsNative ? extractYouTubeId(sharedHero
                 </p>
 
                 <div class="contact-hero__buttons">
-                    <!-- Chat realtime btn -->
-                    <button type="button" class="contact-hero__btn contact-hero__btn--primary js-open-chat">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    <a href={whatsappHref} target="_blank" rel="noopener" data-ga-event="whatsapp_click" data-ga-method="contact_hero_whatsapp" class="contact-hero__btn contact-hero__btn--primary">
+                        <svg fill="currentColor" stroke="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.69.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35z"/>
+                            <path d="M12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 005.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89A11.82 11.82 0 0012.05 0zm0 21.79h-.01a9.87 9.87 0 01-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 01-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 012.89 6.99c0 5.45-4.44 9.88-9.88 9.88z"/>
                         </svg>
-                        Hablar en tiempo real
-                    </button>
+                        WhatsApp directo
+                    </a>
                     <!-- Scroll to form btn -->
                     <button type="button" class="contact-hero__btn contact-hero__btn--secondary js-scroll-form">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -222,12 +223,13 @@ const sharedHeroVideoId = !sharedHeroVideoIsNative ? extractYouTubeId(sharedHero
                     <input type="hidden" name="formStartedAt" value={captcha.startedAt} />
 
                     <div class="contact-form__field">
-                        <label for="contact-captcha" class="contact-form__label">
-                            Anti-spam: cuanto es {captcha.question}? *
-                        </label>
-                        <input type="number" id="contact-captcha" name="captchaAnswer" required
-                               class="contact-form__input" inputmode="numeric" autocomplete="off"
-                               placeholder="Respuesta" />
+                        <label for="contact-captcha" class="contact-form__label">Captcha *</label>
+                        <div class="contact-form__captcha">
+                            <img src={captcha.image} alt="Captcha de seguridad" width="190" height="62" />
+                            <input type="text" id="contact-captcha" name="captchaAnswer" required
+                                   class="contact-form__input" inputmode="text" autocomplete="off"
+                                   autocapitalize="characters" maxlength="6" placeholder="Escribe el código" />
+                        </div>
                     </div>
 
                     <div id="form-status" class="contact-form__status hidden"></div>
@@ -332,55 +334,6 @@ const sharedHeroVideoId = !sharedHeroVideoIsNative ? extractYouTubeId(sharedHero
     <!-- ═══ FAQ SECTION ═══ -->
     <FaqsSection />
 
-    <!-- ═══════════════════════════════════════════
-         CHAT WIDGET
-    ═══════════════════════════════════════════ -->
-
-    <!-- No floating bubble anymore, triggered via Hero Button -->
-
-    <!-- Chat panel -->
-    <div id="chat-panel" class="chat-panel">
-        <div class="chat-panel__header">
-            <div class="chat-panel__avatar">VM</div>
-            <div class="chat-panel__header-info">
-                <h3>VideoMarketing Sevilla</h3>
-                <p><span class="chat-panel__status-dot"></span>Normalmente responde en minutos</p>
-            </div>
-            <button id="chat-close" class="chat-panel__close" aria-label="Cerrar chat">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-
-        <!-- Name form (pre-chat) -->
-        <div id="chat-name-form" class="chat-panel__name-form">
-            <h4>👋 ¡Hola!</h4>
-            <p>Introduce tu nombre para iniciar el chat</p>
-            <input type="text" id="chat-name-input" placeholder="Tu nombre" maxlength="50" />
-            <button id="chat-start-btn">Iniciar chat</button>
-        </div>
-
-        <!-- Messages (hidden until chat starts) -->
-        <div id="chat-messages" class="chat-panel__messages" style="display:none">
-            <div class="chat-welcome">
-                <span class="chat-welcome__emoji">💬</span>
-                <strong>¡Bienvenido!</strong><br/>
-                Escribe tu mensaje y te responderemos lo antes posible.
-            </div>
-        </div>
-
-        <!-- Input (hidden until chat starts) -->
-        <div id="chat-input-area" class="chat-panel__input" style="display:none">
-            <input type="text" id="chat-input" placeholder="Escribe un mensaje..." maxlength="500" />
-            <button id="chat-send" class="chat-panel__send" disabled>
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-
 </BaseLayout>
 
 <link rel="stylesheet" href="/src/styles/contacto.css" />
@@ -424,168 +377,10 @@ const sharedHeroVideoId = !sharedHeroVideoIsNative ? extractYouTubeId(sharedHero
         submitBtn.querySelector("span")!.textContent = "Enviar mensaje";
     });
 
-    // ── Chat Widget ──
-    const chatPanel = document.getElementById('chat-panel')!;
-    const chatCloseBtn = document.getElementById('chat-close')!;
-    const chatNameForm = document.getElementById('chat-name-form')!;
-    const chatNameInput = document.getElementById('chat-name-input') as HTMLInputElement;
-    const chatStartBtn = document.getElementById('chat-start-btn')!;
-    const chatMessages = document.getElementById('chat-messages')!;
-    const chatInputArea = document.getElementById('chat-input-area')!;
-    const chatInput = document.getElementById('chat-input') as HTMLInputElement;
-    const chatSend = document.getElementById('chat-send') as HTMLButtonElement;
-
-    let chatOpen = false;
-    let conversationId: string | null = null;
-    let visitorId = localStorage.getItem('vm_visitor_id');
-    let visitorName = localStorage.getItem('vm_visitor_name');
-    let pollInterval: ReturnType<typeof setInterval> | null = null;
-
-    if (!visitorId) {
-        visitorId = 'v_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-        localStorage.setItem('vm_visitor_id', visitorId);
-    }
-
-    // Close Chat
-    chatCloseBtn.addEventListener('click', () => {
-        chatOpen = false;
-        chatPanel.classList.remove('chat-panel--open');
-    });
-
-    // Open chat from Hero
-    const btnOpenChat = document.querySelector('.js-open-chat');
-    if (btnOpenChat) {
-        btnOpenChat.addEventListener('click', () => {
-            if (!chatOpen) {
-                chatOpen = true;
-                chatPanel.classList.add('chat-panel--open');
-                if (visitorName) {
-                    startChat();
-                }
-            }
-        });
-    }
 
     document.querySelector('.js-scroll-form')?.addEventListener('click', () => {
         document.querySelector('.contact-body')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
-
-    // Start chat
-    chatStartBtn.addEventListener('click', () => {
-        const name = chatNameInput.value.trim();
-        if (!name) { chatNameInput.focus(); return; }
-        visitorName = name;
-        localStorage.setItem('vm_visitor_name', name);
-        startChat();
-    });
-
-    chatNameInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') chatStartBtn.click();
-    });
-
-    async function startChat() {
-        chatNameForm.style.display = 'none';
-        chatMessages.style.display = 'flex';
-        chatInputArea.style.display = 'flex';
-        chatInput.focus();
-
-        // Create or resume conversation
-        try {
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'create',
-                    visitor_id: visitorId,
-                    visitor_name: visitorName,
-                }),
-            });
-            const data = await res.json();
-            conversationId = data.conversation_id;
-
-            // Load existing messages
-            await loadMessages();
-
-            // Start polling for new messages
-            if (pollInterval) clearInterval(pollInterval);
-            pollInterval = setInterval(loadMessages, 5000);
-        } catch (err) {
-            console.error('Chat error:', err);
-        }
-    }
-
-    async function loadMessages() {
-        if (!conversationId) return;
-        try {
-            const res = await fetch(`/api/chat?conversation_id=${conversationId}`);
-            const messages = await res.json();
-
-            // Clear welcome if there are messages
-            const welcome = chatMessages.querySelector('.chat-welcome');
-            if (messages.length > 0 && welcome) welcome.remove();
-
-            // Render messages not yet in DOM
-            const existing = chatMessages.querySelectorAll('.chat-msg');
-            const existingIds = new Set(Array.from(existing).map(el => (el as HTMLElement).dataset.id));
-
-            let hasNew = false;
-            messages.forEach((msg: any) => {
-                if (!existingIds.has(msg.id)) {
-                    const div = document.createElement('div');
-                    div.className = `chat-msg chat-msg--${msg.sender_type}`;
-                    div.dataset.id = msg.id;
-                    const time = new Date(msg.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                    div.innerHTML = `${msg.message}<span class="chat-msg__time">${time}</span>`;
-                    chatMessages.appendChild(div);
-                    hasNew = true;
-                }
-            });
-
-            if (hasNew) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        } catch (err) {
-            console.error('Load messages error:', err);
-        }
-    }
-
-    // Send message
-    chatInput.addEventListener('input', () => {
-        chatSend.disabled = !chatInput.value.trim();
-    });
-    chatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !chatSend.disabled) sendMessage();
-    });
-    chatSend.addEventListener('click', sendMessage);
-
-    async function sendMessage() {
-        const text = chatInput.value.trim();
-        if (!text || !conversationId) return;
-
-        chatInput.value = '';
-        chatSend.disabled = true;
-
-        try {
-            await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'send',
-                    conversation_id: conversationId,
-                    sender_type: 'visitor',
-                    message: text,
-                }),
-            });
-            await loadMessages();
-        } catch (err) {
-            console.error('Send error:', err);
-        }
-    }
-
-    // Auto-start if returning visitor
-    if (visitorName) {
-        chatNameForm.style.display = 'none';
-    }
 </script>
 
 <script>

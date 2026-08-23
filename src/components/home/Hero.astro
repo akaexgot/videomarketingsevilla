@@ -50,6 +50,7 @@ const heroSources = {
 const defaultTitle = 'Creamos\n**historias** que\nimpulsan\nmarcas';
 const titleLines = (settings.hero_title || defaultTitle).split('\n');
 const heroSubtitle = settings.hero_subtitle || '';
+const whatsappHref = `https://wa.me/${settings.whatsapp_number?.replace(/[^0-9]/g, '')}?text=Hola,%20me%20gustaria%20hablar%20sobre%20un%20proyecto%20audiovisual.`;
 ---
 
 <section
@@ -292,14 +293,18 @@ const heroSubtitle = settings.hero_subtitle || '';
             class="hero-actions"
             style={`z-index: 99999; animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: ${(0.5 + titleLines.length * 0.2).toFixed(1)}s; opacity: 0;`}
         >
-            <div class="hero-action-wrap hero-action-wrap--chat">
-                <a href="#global-chat-panel" class="hero-action hero-action--chat" tabindex="-1" aria-hidden="true">
-                    <span>Hablar en tiempo real</span>
-                </a>
-                <button type="button" class="hero-action-hitbox js-open-chat" aria-label="Hablar en tiempo real"></button>
-            </div>
-            <a href="/contacto" class="hero-action hero-action--contact">
-                <span>Ir al formulario</span>
+            <a href="/contacto" class="hero-action hero-action--primary">
+                <span>Solicitar presupuesto</span>
+            </a>
+            <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener"
+                data-ga-event="whatsapp_click"
+                data-ga-method="hero_whatsapp"
+                class="hero-action hero-action--secondary"
+            >
+                <span>WhatsApp directo</span>
             </a>
         </div>
     </div>
@@ -322,57 +327,7 @@ const heroSubtitle = settings.hero_subtitle || '';
     </div>
 </section>
 
-<script>
-    const heroChatCta = document.querySelector('.hero-action-hitbox');
-    const heroChatWrap = document.querySelector('.hero-action-wrap--chat');
 
-    function getHeroPoint(e: Event) {
-        if (e instanceof PointerEvent || e instanceof MouseEvent) {
-            return { x: e.clientX, y: e.clientY };
-        }
-        if (e instanceof TouchEvent) {
-            const touch = e.changedTouches[0] || e.touches[0];
-            if (touch) return { x: touch.clientX, y: touch.clientY };
-        }
-        return null;
-    }
-
-    function openHeroChat(e: Event) {
-        e.preventDefault();
-        e.stopPropagation();
-        const openGlobalChat = (window as any).vmOpenGlobalChat;
-        if (typeof openGlobalChat === 'function') {
-            openGlobalChat();
-            return;
-        }
-        document.getElementById('floating-chat-btn')?.click();
-    }
-
-    function isInsideHeroChatCta(e: Event) {
-        if (!(heroChatWrap instanceof HTMLElement)) return false;
-        const point = getHeroPoint(e);
-        if (!point) return false;
-
-        const rect = heroChatWrap.getBoundingClientRect();
-        return (
-            point.x >= rect.left &&
-            point.x <= rect.right &&
-            point.y >= rect.top &&
-            point.y <= rect.bottom
-        );
-    }
-
-    function openHeroChatFromCoordinates(e: Event) {
-        if (!isInsideHeroChatCta(e)) return;
-        openHeroChat(e);
-    }
-
-    heroChatCta?.addEventListener('pointerdown', openHeroChat, { capture: true });
-    heroChatCta?.addEventListener('touchstart', openHeroChat, { capture: true, passive: false });
-    heroChatCta?.addEventListener('click', openHeroChat, { capture: true });
-    document.addEventListener('pointerdown', openHeroChatFromCoordinates, { capture: true });
-    document.addEventListener('touchstart', openHeroChatFromCoordinates, { capture: true, passive: false });
-</script>
 
 <style>
     .video-bg {
@@ -387,11 +342,6 @@ const heroSubtitle = settings.hero_subtitle || '';
         min-width: 177.77vh;
         pointer-events: none;
     }
-
-    #hero .js-open-chat > * {
-        pointer-events: none;
-    }
-
     .hero-title {
         position: relative;
         display: flex;
@@ -508,15 +458,6 @@ const heroSubtitle = settings.hero_subtitle || '';
         margin-top: clamp(0.95rem, 2vh, 1.4rem);
         padding: 0 1rem;
     }
-
-    .hero-action-wrap {
-        position: relative;
-        z-index: 100000;
-        display: block;
-        width: 100%;
-        isolation: isolate;
-    }
-
     .hero-action {
         position: relative;
         z-index: 99999;
@@ -540,37 +481,17 @@ const heroSubtitle = settings.hero_subtitle || '';
         touch-action: manipulation;
         isolation: isolate;
     }
-
-    .hero-action-hitbox {
-        position: absolute;
-        inset: -2px;
-        z-index: 2147483647;
-        display: block;
-        width: calc(100% + 4px);
-        height: calc(100% + 4px);
-        margin: 0;
-        padding: 0;
-        border: 0;
-        border-radius: 9999px;
-        background: rgba(255, 255, 255, 0.001);
-        cursor: pointer;
-        appearance: none;
-        -webkit-appearance: none;
-        -webkit-tap-highlight-color: transparent;
-        touch-action: manipulation;
-    }
-
     .hero-action > * {
         pointer-events: none;
     }
 
-    .hero-action--chat {
+    .hero-action--primary {
         background: #e11d48;
         color: #fff;
         box-shadow: 0 10px 24px rgba(225, 29, 72, 0.38);
     }
 
-    .hero-action--contact {
+    .hero-action--secondary {
         background: rgba(255, 255, 255, 0.1);
         color: #fff;
         border: 1px solid rgba(255, 255, 255, 0.22);
@@ -588,10 +509,6 @@ const heroSubtitle = settings.hero_subtitle || '';
         .hero-action {
             width: auto;
             min-width: 13.5rem;
-        }
-
-        .hero-action-wrap {
-            width: auto;
         }
     }
 

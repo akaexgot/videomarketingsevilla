@@ -42,8 +42,7 @@ const allMenuGroups = [
             { label: "Portal Clientes", href: "/admin/portal", icon: "users", id: "portal" },
             { label: "Contratos", href: "/admin/contratos", icon: "file-text", id: "contratos" },
             { label: "Carta", href: "/admin/carta", icon: "scroll", id: "carta" },
-            { label: "Mensajes", href: "/admin/mensajes", icon: "mail", id: "mensajes" },
-            { label: "Chat en Vivo", href: "/admin/chat", icon: "message-circle", id: "chat" }
+            { label: "Mensajes", href: "/admin/mensajes", icon: "mail", id: "mensajes" }
         ]
     },
     {
@@ -178,7 +177,7 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
                                                 >
                                                     <i data-lucide={item.icon} class:list={["w-4 h-4 transition-colors", isActive ? "text-rose-500" : "text-zinc-500 group-hover:text-zinc-400"]}></i>
                                                     <span class="flex-1">{item.label}</span>
-                                                    {(item.id === 'mensajes' || item.id === 'chat') && (
+                                                    {item.id === 'mensajes' && (
                                                         <span 
                                                             id={`badge-sidebar-${item.id}`} 
                                                             class="hidden items-center justify-center bg-rose-600 text-white text-[10px] font-bold rounded-full h-4.5 min-w-[18px] px-1.5 shadow-sm"
@@ -418,15 +417,6 @@ const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
                             }
                         }
 
-                        const chatBadge = document.getElementById('badge-sidebar-chat');
-                        if (chatBadge) {
-                            if (data.chats > 0) {
-                                chatBadge.textContent = data.chats > 99 ? '99+' : data.chats;
-                                chatBadge.classList.replace('hidden', 'flex');
-                            } else {
-                                chatBadge.classList.replace('flex', 'hidden');
-                            }
-                        }
                     }
                 } catch (err) {
                     console.error('Failed to update badges:', err);

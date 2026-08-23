@@ -54,7 +54,7 @@ function getCanonicalRedirectUrl(request: Request) {
 }
 
 export const onRequest = defineMiddleware(async ({ request, cookies, redirect, locals }, next) => {
-  const { pathname, searchParams, host } = new URL(request.url);
+  const { pathname, host } = new URL(request.url);
   const canonicalRedirectUrl = getCanonicalRedirectUrl(request);
 
   if (canonicalRedirectUrl) {
@@ -76,11 +76,7 @@ export const onRequest = defineMiddleware(async ({ request, cookies, redirect, l
     });
   }
 
-  // Sensitive chat actions that need admin protection
-  const isAdminChatAction = pathname === "/api/chat" && searchParams.get('list') === '1';
-
-  const isProtected = (PROTECTED.some(r => pathname.startsWith(r)) || isAdminChatAction)
-    && !PUBLIC.includes(pathname);
+  const isProtected = PROTECTED.some(r => pathname.startsWith(r)) && !PUBLIC.includes(pathname);
 
   if (!isProtected) return next();
 
@@ -127,7 +123,6 @@ export const onRequest = defineMiddleware(async ({ request, cookies, redirect, l
     "/admin/portal": "portal",
     "/admin/contratos": "contratos",
     "/admin/mensajes": "mensajes",
-    "/admin/chat": "chat",
     "/admin/ajustes": "ajustes",
     "/admin/seo": "seo",
     "/admin/usuarios": "usuarios",
@@ -151,7 +146,6 @@ export const onRequest = defineMiddleware(async ({ request, cookies, redirect, l
     "/api/admin/awards": "ajustes",
     "/api/admin/seo": "seo",
     "/api/admin/users": "usuarios",
-    "/api/chat": "chat",
   };
 
   // Identify the target section

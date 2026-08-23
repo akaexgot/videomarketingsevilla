@@ -113,33 +113,6 @@ export async function sendContactNotification(data: ContactFormData) {
     }, 'Error enviando notificacion de contacto');
 }
 
-/** Notificación al Administrador (Chat en Vivo) */
-export async function sendChatNotification(visitorName: string, message: string, adminEmail: string) {
-    const toEmail = adminEmail || 'info@videomarketingsevilla.es';
-
-    const content = `
-        <h2 class="email-title">¡Alguien te ha escrito por el Chat!</h2>
-        <p style="font-size: 16px; margin-bottom: 20px;">Un visitante llamado <strong>${visitorName}</strong> acaba de iniciar una conversación de chat en tu página web y está esperando respuesta en tiempo real.</p>
-        
-        <p style="font-weight: 600; color: #1A1A1A; margin-bottom: 5px;">Primer mensaje del cliente:</p>
-        <div class="message-box">
-          ${message.replace(/\n/g, '<br>')}
-        </div>
-        
-        <div style="text-align: center; margin-top: 40px;">
-           <a href="https://videomarketingsevilla.com/admin" class="cta-button">Abrir Panel de Control</a>
-           <p style="font-size: 13px; color: #888; margin-top: 10px;">Inicia sesión para responder a ${visitorName} directamente desde el panel.</p>
-        </div>
-    `;
-
-    return sendEmailOrThrow({
-        from: `Chat en Vivo <${defaultFromEmail}>`,
-        to: toEmail,
-        subject: `💬 Nuevo chat web: ${visitorName}`,
-        html: getEmailShell('Nuevo chat iniciado', content)
-    }, 'Error enviando notificacion de chat');
-}
-
 /** Auto-respuesta cordial de Cortesía al Cliente */
 export async function sendContactAutoReply(data: ContactFormData) {
     const content = `

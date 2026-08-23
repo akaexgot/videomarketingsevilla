@@ -242,6 +242,32 @@
     box-shadow: 0 0 0 3px rgba(155,27,48,0.1);
 }
 
+.contact-form__captcha {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.contact-form__captcha img {
+    width: 190px;
+    height: 62px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 0.75rem;
+    background: #f9fafb;
+}
+
+@media (max-width: 520px) {
+    .contact-form__captcha {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-form__captcha img {
+        width: 100%;
+        max-width: 190px;
+    }
+}
+
 .contact-form__textarea {
     resize: vertical;
     min-height: 140px;

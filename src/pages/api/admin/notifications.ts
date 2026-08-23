@@ -12,15 +12,8 @@ export const GET: APIRoute = async () => {
             .select('*', { count: 'exact', head: true })
             .eq('status', 'nuevo');
 
-        // 2. Get active chats count
-        const { count: activeChats } = await supabase
-            .from('chat_conversations')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'active');
-
         return new Response(JSON.stringify({
-            messages: unreadMessages || 0,
-            chats: activeChats || 0
+            messages: unreadMessages || 0
         }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }

@@ -21,7 +21,7 @@ export const POST: APIRoute = async ({ request }) => {
         } = data;
 
         if (!validateCaptcha({ token: captchaToken, answer: captchaAnswer, website, startedAt: formStartedAt })) {
-            return new Response(JSON.stringify({ error: 'Verificacion anti-spam incorrecta' }), {
+            return new Response(JSON.stringify({ error: 'Captcha incorrecto' }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },
             });
