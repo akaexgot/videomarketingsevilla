@@ -24,21 +24,9 @@ const structuredData = [
     },
 ];
 
-function extractYouTubeId(url: string | null | undefined): string | null {
-    if (!url) return null;
-    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-    if (m) return m[1];
-    if (/^[A-Za-z0-9_-]{11}$/.test(url.trim())) return url.trim();
-    return null;
-}
-
-const sharedHeroVideoUrl = settings.hero_video_desktop;
-const sharedHeroVideoIsNative = sharedHeroVideoUrl && (
-    sharedHeroVideoUrl.includes('cloudinary.com') ||
-    sharedHeroVideoUrl.endsWith('.mp4') ||
-    sharedHeroVideoUrl.endsWith('.webm')
-);
-const sharedHeroVideoId = !sharedHeroVideoIsNative ? extractYouTubeId(sharedHeroVideoUrl) : null;
+const sharedHeroVideoUrl = null;
+const sharedHeroVideoIsNative = false;
+const sharedHeroVideoId = null;
 const whatsappHref = `https://wa.me/${settings.whatsapp_number?.replace(/[^0-9]/g, '')}?text=Hola,%20me%20gustaria%20saber%20mas%20sobre%20vuestros%20servicios%20de%20video%20marketing.`;
 ---
 
@@ -51,7 +39,7 @@ const whatsappHref = `https://wa.me/${settings.whatsapp_number?.replace(/[^0-9]/
     <!-- ═══════════════════════════════════════════
          HERO HEADER
     ═══════════════════════════════════════════ -->
-    {sharedHeroVideoUrl && (sharedHeroVideoIsNative || sharedHeroVideoId) ? (
+    {false ? (
         <section id="video-hero" class="relative min-h-[600px] h-screen flex flex-col items-center justify-center text-center overflow-hidden w-full" style={sharedHeroVideoId ? `background: #000 url(https://i.ytimg.com/vi/${sharedHeroVideoId}/maxresdefault.jpg) center/cover no-repeat;` : 'background: #000;'}>
             <div class="absolute inset-0 z-0 overflow-hidden bg-black pointer-events-none">
                 {sharedHeroVideoIsNative ? (
@@ -110,7 +98,7 @@ const whatsappHref = `https://wa.me/${settings.whatsapp_number?.replace(/[^0-9]/
             </div>
         </section>
     ) : (
-        <section class="contact-hero mb-0">
+        <section class="contact-hero mb-0 hidden">
             <div class="contact-hero__glow"></div>
 
             <div class="section-container contact-hero__inner">
@@ -172,7 +160,13 @@ const whatsappHref = `https://wa.me/${settings.whatsapp_number?.replace(/[^0-9]/
         }
     </style>
 
-    <section class="contact-body">
+    <style is:global>
+        body, main { background-color: #ffffff !important; }
+        .contact-hero { display: none !important; }
+        #faq-section { min-height: auto !important; padding-top: 3rem !important; }
+    </style>
+
+    <section class="contact-body contact-body--first">
         <div class="contact-body__bg-dots"></div>
 
         <div class="section-container contact-body__grid">

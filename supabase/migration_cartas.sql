@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS public.cartas (
   slug TEXT NOT NULL UNIQUE,
   tipo TEXT NOT NULL CHECK (tipo IN ('imagenes', 'pdf', 'manual')),
   video_url TEXT,
+  sample_videos JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

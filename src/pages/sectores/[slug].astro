@@ -40,6 +40,17 @@ const structuredData = [
     ]),
     buildSectorSchema(sector, pagePath),
 ];
+
+const heroTitle = sector.hero_title || `Video Marketing para ${sector.title}`;
+const heroSubtitle = sector.hero_subtitle || sector.description;
+const defaultSectionTitle = `Producción audiovisual para el sector ${sector.title.toLowerCase()}`;
+const defaultSectionText = `${sector.description || ''}\n\nConocemos las particularidades del sector ${sector.title.toLowerCase()} y sabemos cómo comunicar tu propuesta de valor a tu público objetivo. Nuestro equipo produce contenido audiovisual que habla el lenguaje de tu industria.`;
+const sectionTitle = sector.section_title || defaultSectionTitle;
+const sectionText = sector.section_text || defaultSectionText;
+const sectionTextParagraphs = sectionText
+    .split(/\n{2,}/)
+    .map((text: string) => text.trim())
+    .filter(Boolean);
 ---
 
 <BaseLayout
@@ -88,11 +99,8 @@ const structuredData = [
                 <span class="detail-hero__dot"></span>
                 <span>Sector</span>
             </div>
-            <h1 class="detail-hero__title">
-                Video Marketing para<br />
-                <span class="text-gradient-carmin">{sector.title}</span>
-            </h1>
-            <p class="detail-hero__subtitle">{sector.description}</p>
+            <h1 class="detail-hero__title">{heroTitle}</h1>
+            {heroSubtitle && <p class="detail-hero__subtitle">{heroSubtitle}</p>}
         </div>
 
         <!-- Scroll indicator -->
@@ -135,15 +143,9 @@ const structuredData = [
                         </div>
                     ) : null}
                     <div class="detail-desc__text">
-                        <h2 class="detail-desc__heading">
-                            Producción audiovisual para el sector
-                            <span class="detail-desc__heading-accent">{sector.title.toLowerCase()}</span>
-                        </h2>
+                        <h2 class="detail-desc__heading">{sectionTitle}</h2>
                         <div class="detail-desc__body">
-                            <p>{sector.description}</p>
-                            <p>
-                                Conocemos las particularidades del sector {sector.title.toLowerCase()} y sabemos cómo comunicar tu propuesta de valor a tu público objetivo. Nuestro equipo produce contenido audiovisual que habla el lenguaje de tu industria.
-                            </p>
+                            {sectionTextParagraphs.map((paragraph: string) => <p>{paragraph}</p>)}
                         </div>
                         <!-- CTA -->
                         <div class="detail-cta reveal" style="margin-top: 2rem;">

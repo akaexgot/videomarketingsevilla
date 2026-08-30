@@ -14,7 +14,7 @@ export const POST: APIRoute = async ({ request }) => {
         const body = await request.json();
         
         // Whitelist valid columns
-        const allowed = ['title', 'slug', 'description', 'icon', 'video', 'video_vertical', 'preview_seconds', 'order'];
+        const allowed = ['title', 'slug', 'description', 'hero_title', 'hero_subtitle', 'section_title', 'section_text', 'icon', 'video', 'video_vertical', 'preview_seconds', 'order'];
         const filteredBody: any = {};
         for (const key of allowed) {
             if (key in body) filteredBody[key] = body[key];
@@ -46,7 +46,7 @@ export const PUT: APIRoute = async ({ request }) => {
         if (!id) return new Response(JSON.stringify({ error: 'id required' }), { status: 400 });
 
         // Whitelist valid columns
-        const allowed = ['title', 'slug', 'description', 'icon', 'video', 'video_vertical', 'preview_seconds', 'order'];
+        const allowed = ['title', 'slug', 'description', 'hero_title', 'hero_subtitle', 'section_title', 'section_text', 'icon', 'video', 'video_vertical', 'preview_seconds', 'order'];
         const updates: any = {};
         for (const key of allowed) {
             if (key in body) updates[key] = body[key];

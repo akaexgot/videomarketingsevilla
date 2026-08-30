@@ -35,7 +35,82 @@ export function getInstagramEmbedUrl(url?: string | null): string | null {
   if (!url) return null;
   const match = url.trim().match(/instagram\.com\/(reel|reels|p)\/([A-Za-z0-9_-]+)/);
   if (!match) return null;
-  return `https://www.instagram.com/reel/${match[2]}/embed/`;
+  const kind = match[1] === 'p' ? 'p' : 'reel';
+  return `https://www.instagram.com/${kind}/${match[2]}/embed/`;
+}
+
+export function getVimeoId(value?: string | null): string | null {
+  if (!value) return null;
+  const v = value.trim();
+  const match = v.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
+  if (match) return match[1];
+  return null;
+}
+
+export type VideoEmbed = {
+  sourceUrl: string;
+  embedUrl: string;
+  provider: 'youtube' | 'vimeo' | 'instagram' | 'native' | 'unknown';
+  orientation: 'vertical' | 'horizontal';
+  isNative: boolean;
+};
+
+export function getVideoEmbed(value?: string | null): VideoEmbed | null {
+  if (!value) return null;
+
+  const sourceUrl = value.trim();
+  if (!sourceUrl) return null;
+
+  const lower = sourceUrl.toLowerCase();
+  const isNative = lower.includes('cloudinary.com') || lower.endsWith('.mp4') || lower.endsWith('.webm');
+  if (isNative) {
+    const orientation = /(^|[-_/])(vertical|portrait|reel|short)([-_.?/]|$)/i.test(sourceUrl)
+      ? 'vertical'
+      : 'horizontal';
+    return { sourceUrl, embedUrl: sourceUrl, provider: 'native', orientation, isNative: true };
+  }
+
+  const youtubeId = getVideoId(sourceUrl);
+  if (youtubeId) {
+    const orientation = /\/shorts\//i.test(sourceUrl) ? 'vertical' : 'horizontal';
+    return {
+      sourceUrl,
+      embedUrl: `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=0&loop=1&playsinline=1&rel=0`,
+      provider: 'youtube',
+      orientation,
+      isNative: false,
+    };
+  }
+
+  const instagramEmbed = getInstagramEmbedUrl(sourceUrl);
+  if (instagramEmbed) {
+    return {
+      sourceUrl,
+      embedUrl: instagramEmbed,
+      provider: 'instagram',
+      orientation: 'vertical',
+      isNative: false,
+    };
+  }
+
+  const vimeoId = getVimeoId(sourceUrl);
+  if (vimeoId) {
+    return {
+      sourceUrl,
+      embedUrl: `https://player.vimeo.com/video/${vimeoId}?title=0&byline=0&portrait=0`,
+      provider: 'vimeo',
+      orientation: 'horizontal',
+      isNative: false,
+    };
+  }
+
+  return {
+    sourceUrl,
+    embedUrl: sourceUrl,
+    provider: 'unknown',
+    orientation: /\/shorts\/|instagram\.com\/(reel|reels)\//i.test(sourceUrl) ? 'vertical' : 'horizontal',
+    isNative: false,
+  };
 }
 
 export function toYouTubeEmbed(url?: string | null): string | null {
@@ -74,6 +149,8 @@ export function buildProjectScreens(all: Project[]): Project[][] {
 export default {
   getVideoId,
   toYouTubeEmbed,
+  getVideoEmbed,
+  getVimeoId,
   isInstagramReel,
   getInstagramEmbedUrl,
   buildProjectScreens,

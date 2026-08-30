@@ -31,6 +31,8 @@ if (carta.tipo === 'imagenes' || carta.tipo === 'pdf') {
         servicios: (b.servicios || []).sort((a: any, b: any) => a.orden - b.orden)
     }));
 }
+
+const sampleVideos = Array.isArray(carta.sample_videos) ? carta.sample_videos.slice(0, 3) : [];
 ---
 
 <AdminLayout title={`Editando: ${carta.nombre}`} activeSection="carta">
@@ -59,6 +61,7 @@ if (carta.tipo === 'imagenes' || carta.tipo === 'pdf') {
         id: carta.id,
         tipo: carta.tipo,
         video_url: carta.video_url,
+        sample_videos: sampleVideos,
         imagenes,
         bloques
     })}></script>
@@ -139,6 +142,22 @@ if (carta.tipo === 'imagenes' || carta.tipo === 'pdf') {
                         <label class="block text-sm font-medium text-zinc-400 mb-1">Enlace YouTube (Opcional)</label>
                         <input type="url" id="edit-video" class="w-full px-3 py-2 border border-zinc-800 bg-zinc-950 rounded-md text-zinc-100 focus:outline-none focus:border-rose-500 text-sm" placeholder="https://youtube.com/..." value={carta.video_url} />
                         <p class="text-[11px] text-zinc-500 mt-1">Si añades un vídeo, se mostrará junto a tu carta. Shorts para diseño vertical.</p>
+                    </div>
+
+                    <div class="border-t border-zinc-800 pt-4">
+                        <label class="block text-sm font-medium text-zinc-400 mb-3">Vídeos de ejemplo (opcionales)</label>
+                        <div class="space-y-3">
+                            {[0, 1, 2].map((idx) => (
+                                <input
+                                    type="url"
+                                    class="sample-video-input w-full px-3 py-2 border border-zinc-800 bg-zinc-950 rounded-md text-zinc-100 focus:outline-none focus:border-rose-500 text-sm"
+                                    placeholder={`Ejemplo ${idx + 1}: YouTube, Vimeo o Instagram`}
+                                    value={sampleVideos[idx] || ''}
+                                    data-sample-idx={idx}
+                                />
+                            ))}
+                        </div>
+                        <p class="text-[11px] text-zinc-500 mt-2">Si dejas los tres vacíos, no aparece ninguna sección de ejemplos.</p>
                     </div>
                 </div>
             </div>
@@ -577,10 +596,15 @@ if (carta.tipo === 'imagenes' || carta.tipo === 'pdf') {
             btn.disabled = true;
 
             const video_url = (document.getElementById('edit-video') as HTMLInputElement)?.value.trim() || null;
+            const sample_videos = Array.from(document.querySelectorAll<HTMLInputElement>('.sample-video-input'))
+                .map((input) => input.value.trim())
+                .filter(Boolean)
+                .slice(0, 3);
 
             let payload: any = {
                 tipo: state.tipo,
-                video_url
+                video_url,
+                sample_videos
             };
 
             if (state.tipo === 'imagenes' || state.tipo === 'pdf') {
@@ -606,7 +630,7 @@ if (carta.tipo === 'imagenes' || carta.tipo === 'pdf') {
                 const r2 = await fetch(`/api/admin/cartas`, {
                     method: 'PUT',
                     headers:{'Content-Type':'application/json'},
-                    body: JSON.stringify({ id: state.id, video_url })
+                    body: JSON.stringify({ id: state.id, video_url, sample_videos })
                 });
 
                 if(r1.ok && r2.ok) {

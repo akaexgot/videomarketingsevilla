@@ -94,7 +94,7 @@ const headerWhatsappText = encodeURIComponent("Hola, me gustaria hablar con Vide
     const lines    = navbar.querySelectorAll<HTMLElement>('.hamburger-line');
 
     const path        = window.location.pathname;
-    const lightPages  = ['/portal-clientes'];
+    const lightPages  = ['/portal-clientes', '/contacto'];
     const isLightPage = lightPages.some(p => path === p || path.startsWith(p + '/'));
     const isProjectPage = path.startsWith('/proyectos/') && path !== '/proyectos';
 

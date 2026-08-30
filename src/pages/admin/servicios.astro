@@ -108,7 +108,7 @@ const services = await getServices();
 
 <!-- Modal -->
 <div id="modal-overlay" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl w-[calc(100%-2rem)] sm:w-full max-w-2xl shadow-2xl overflow-hidden">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl w-[calc(100%-2rem)] sm:w-full max-w-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b border-zinc-800" style="padding: 1rem 1.5rem;">
             <h3 id="modal-title" class="text-lg font-semibold text-zinc-50 flex items-center gap-2">
                 <span>Nuevo servicio</span>
@@ -136,6 +136,28 @@ const services = await getServices();
                 <div>
                     <label class="block text-sm font-medium text-zinc-300" style="margin-bottom: 0.25rem;">Descripción</label>
                     <textarea id="m-description" rows="3" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors text-sm resize-none"></textarea>
+                </div>
+
+                <div class="bg-zinc-950/70 border border-zinc-800 rounded-xl" style="padding: 1rem;">
+                    <h4 class="text-sm font-semibold text-zinc-100" style="margin-bottom: 1rem;">Textos de la página pública</h4>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-300" style="margin-bottom: 0.25rem;">H1 principal</label>
+                            <input type="text" id="m-hero-title" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors text-sm" placeholder="Si está vacío usa el título" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-300" style="margin-bottom: 0.25rem;">Subtítulo bajo el H1 / sobre el vídeo</label>
+                            <textarea id="m-hero-subtitle" rows="2" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors text-sm resize-none" placeholder="Si está vacío usa la descripción"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-300" style="margin-bottom: 0.25rem;">H2 sección inferior</label>
+                            <input type="text" id="m-section-title" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors text-sm" placeholder="Título de la sección inferior" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-300" style="margin-bottom: 0.25rem;">Texto de la sección inferior</label>
+                            <textarea id="m-section-text" rows="4" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors text-sm resize-none" placeholder="Separa párrafos con una línea en blanco"></textarea>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2" style="display: grid; gap: 1.5rem;">
@@ -213,6 +235,10 @@ const services = await getServices();
             $('m-title').value = service?.title || '';
             $('m-slug').value = service?.slug || '';
             ($('m-description') as unknown as HTMLTextAreaElement).value = service?.description || '';
+            $('m-hero-title').value = service?.hero_title || '';
+            ($('m-hero-subtitle') as unknown as HTMLTextAreaElement).value = service?.hero_subtitle || '';
+            $('m-section-title').value = service?.section_title || '';
+            ($('m-section-text') as unknown as HTMLTextAreaElement).value = service?.section_text || '';
             $('m-video').value = service?.video || '';
             $('m-video-vertical').value = service?.video_vertical || '';
             $('m-order').value = String(service?.order ?? 0);
@@ -367,6 +393,10 @@ const services = await getServices();
                 title,
                 slug: $('m-slug').value.trim() || null,
                 description: ($('m-description') as unknown as HTMLTextAreaElement).value.trim() || null,
+                hero_title: $('m-hero-title').value.trim() || null,
+                hero_subtitle: ($('m-hero-subtitle') as unknown as HTMLTextAreaElement).value.trim() || null,
+                section_title: $('m-section-title').value.trim() || null,
+                section_text: ($('m-section-text') as unknown as HTMLTextAreaElement).value.trim() || null,
                 video: $('m-video').value.trim() || null,
                 video_vertical: $('m-video-vertical').value.trim() || null,
                 order: parseInt($('m-order').value) || 0,

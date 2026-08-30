@@ -294,6 +294,18 @@ export function invalidateCache(tag?: string) {
         }
     }
 
+    if (tag === 'services') {
+        for (const key of publicDataCache.keys()) {
+            if (key.startsWith('service:')) publicDataCache.delete(key);
+        }
+    }
+
+    if (tag === 'sectors') {
+        for (const key of publicDataCache.keys()) {
+            if (key.startsWith('sector:')) publicDataCache.delete(key);
+        }
+    }
+
     if (tag === 'portal-clients') {
         publicDataCache.delete('portal-clients');
     }
