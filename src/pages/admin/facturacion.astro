@@ -169,6 +169,17 @@ const getStatusLabel = (status: string) => {
                                                 <i data-lucide="download" class="w-4 h-4"></i>
                                             </a>
                                         )}
+                                        {invoice.source === 'manual' && (
+                                            <button
+                                                type="button"
+                                                class="btn-delete-invoice p-2 text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all border border-transparent hover:border-red-500/20"
+                                                data-id={invoice.id}
+                                                data-reference={invoice.reference}
+                                                title="Eliminar factura"
+                                            >
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -248,6 +259,8 @@ const getStatusLabel = (status: string) => {
             </form>
         </div>
     </div>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[70] flex flex-col gap-2" style="pointer-events: none;"></div>
 </AdminLayout>
 
 <script>
@@ -302,6 +315,21 @@ const getStatusLabel = (status: string) => {
                 : 'rounded-lg text-sm font-medium bg-rose-500/10 text-rose-300 border border-rose-500/20';
         }
 
+        function showToast(message: string, type: 'success' | 'error' = 'success') {
+            const container = document.getElementById('toast-container')!;
+            const toast = document.createElement('div');
+            toast.className = `flex items-center shadow-2xl font-semibold pointer-events-auto ${
+                type === 'success' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+            }`;
+            toast.style.cssText = 'padding: 16px 24px; gap: 16px; border-radius: 16px; font-size: 14px;';
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         function getErrorMessage(error: any) {
             const message = String(error?.message || '').trim();
             if (/failed to fetch|networkerror|load failed/i.test(message)) {
@@ -310,16 +338,50 @@ const getStatusLabel = (status: string) => {
             return message || 'Error al crear la factura';
         }
 
-        async function getResponseError(res: Response) {
-            if (res.status === 401) return 'Tu sesion ha caducado. Inicia sesion de nuevo para crear la factura.';
-            if (res.status === 403) return 'No tienes permisos para crear facturas.';
+        async function getResponseError(res: Response, fallback = 'No se pudo crear la factura') {
+            if (res.status === 401) return 'Tu sesion ha caducado. Inicia sesion de nuevo para continuar.';
+            if (res.status === 403) return 'No tienes permisos para gestionar facturas.';
             const error = await res.json().catch(() => null);
-            return error?.error || 'No se pudo crear la factura';
+            return error?.error || fallback;
         }
 
         document.getElementById('btn-add-invoice')?.addEventListener('click', openModal);
         document.getElementById('modal-close')?.addEventListener('click', closeModal);
         document.getElementById('btn-cancel')?.addEventListener('click', closeModal);
+
+        document.querySelectorAll<HTMLButtonElement>('.btn-delete-invoice').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const id = button.dataset.id;
+                const reference = button.dataset.reference || 'esta factura';
+                if (!id) return;
+                if (!window.confirm(`Eliminar ${reference}? Esta accion no se puede deshacer.`)) return;
+
+                const originalHtml = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4"></i>';
+
+                try {
+                    const res = await fetch('/api/admin/invoices', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id }),
+                    });
+
+                    if (!res.ok) {
+                        throw new Error(await getResponseError(res, 'No se pudo eliminar la factura'));
+                    }
+
+                    showToast('Factura eliminada correctamente.', 'success');
+                    setTimeout(() => window.location.reload(), 600);
+                } catch (error: any) {
+                    showToast(getErrorMessage(error), 'error');
+                    button.disabled = false;
+                    button.innerHTML = originalHtml;
+                    // @ts-ignore
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            });
+        });
 
         form?.addEventListener('submit', async (event) => {
             event.preventDefault();

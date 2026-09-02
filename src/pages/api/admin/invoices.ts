@@ -139,3 +139,37 @@ export const PATCH: APIRoute = async ({ request }) => {
         return json({ error: error.message || 'Error al actualizar la factura' }, 500);
     }
 };
+
+export const DELETE: APIRoute = async ({ request }) => {
+    const supabase = getServiceSupabase();
+    if (!supabase) return json({ error: 'Supabase no configurado' }, 500);
+
+    try {
+        const { id } = await request.json();
+        if (!id) return json({ error: 'Falta el ID de la factura' }, 400);
+
+        const { data: invoice, error: findError } = await supabase
+            .from('manual_invoices')
+            .select('id, invoice_number')
+            .eq('id', id)
+            .maybeSingle();
+
+        if (findError) throw findError;
+        if (!invoice) return json({ error: 'Factura manual no encontrada' }, 404);
+
+        const { error: deleteError } = await supabase
+            .from('manual_invoices')
+            .delete()
+            .eq('id', id);
+
+        if (deleteError) throw deleteError;
+
+        const fileName = `factura_${invoice.invoice_number}_manual.pdf`;
+        const { error: storageError } = await supabase.storage.from('contracts').remove([fileName]);
+        if (storageError) console.warn('No se pudo eliminar el PDF de la factura manual:', storageError.message);
+
+        return json({ success: true });
+    } catch (error: any) {
+        return json({ error: error.message || 'Error al eliminar la factura' }, 500);
+    }
+};
