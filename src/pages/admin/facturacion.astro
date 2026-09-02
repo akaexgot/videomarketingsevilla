@@ -260,6 +260,20 @@ const getStatusLabel = (status: string) => {
         </div>
     </div>
 
+    <div id="invoice-confirm-overlay" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md shadow-2xl" style="padding: 1.5rem;">
+            <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4">
+                <i data-lucide="trash-2" class="w-6 h-6 text-rose-400"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Eliminar factura</h3>
+            <p id="invoice-confirm-message" class="text-sm text-zinc-400 leading-relaxed mb-6">Esta accion no se puede deshacer.</p>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="invoice-confirm-cancel" class="px-4 py-2 text-zinc-400 text-sm font-medium hover:text-white transition-colors">Cancelar</button>
+                <button type="button" id="invoice-confirm-delete" class="px-5 py-2 bg-rose-600 text-white text-sm font-semibold rounded-lg hover:bg-rose-500 transition-all">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container" class="fixed bottom-6 right-6 z-[70] flex flex-col gap-2" style="pointer-events: none;"></div>
 </AdminLayout>
 
@@ -273,6 +287,11 @@ const getStatusLabel = (status: string) => {
         const sourceFilter = document.getElementById('invoice-source') as HTMLSelectElement;
         const fromInput = document.getElementById('invoice-from') as HTMLInputElement;
         const toInput = document.getElementById('invoice-to') as HTMLInputElement;
+        const confirmOverlay = document.getElementById('invoice-confirm-overlay')!;
+        const confirmMessage = document.getElementById('invoice-confirm-message')!;
+        const confirmCancel = document.getElementById('invoice-confirm-cancel')!;
+        const confirmDelete = document.getElementById('invoice-confirm-delete') as HTMLButtonElement;
+        let pendingDelete: { id: string; button: HTMLButtonElement } | null = null;
 
         function filterRows() {
             const query = searchInput.value.trim().toLowerCase();
@@ -306,6 +325,17 @@ const getStatusLabel = (status: string) => {
         function closeModal() {
             modal.classList.add('hidden');
             form.reset();
+        }
+
+        function openDeleteModal(id: string, reference: string, button: HTMLButtonElement) {
+            pendingDelete = { id, button };
+            confirmMessage.textContent = `Vas a eliminar ${reference}. Esta accion no se puede deshacer.`;
+            confirmOverlay.classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            pendingDelete = null;
+            confirmOverlay.classList.add('hidden');
         }
 
         function showStatus(message: string, type: 'success' | 'error') {
@@ -348,39 +378,53 @@ const getStatusLabel = (status: string) => {
         document.getElementById('btn-add-invoice')?.addEventListener('click', openModal);
         document.getElementById('modal-close')?.addEventListener('click', closeModal);
         document.getElementById('btn-cancel')?.addEventListener('click', closeModal);
+        confirmCancel.addEventListener('click', closeDeleteModal);
+        confirmOverlay.addEventListener('click', (event) => {
+            if (event.target === confirmOverlay) closeDeleteModal();
+        });
 
         document.querySelectorAll<HTMLButtonElement>('.btn-delete-invoice').forEach((button) => {
-            button.addEventListener('click', async () => {
+            button.addEventListener('click', () => {
                 const id = button.dataset.id;
                 const reference = button.dataset.reference || 'esta factura';
                 if (!id) return;
-                if (!window.confirm(`Eliminar ${reference}? Esta accion no se puede deshacer.`)) return;
-
-                const originalHtml = button.innerHTML;
-                button.disabled = true;
-                button.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4"></i>';
-
-                try {
-                    const res = await fetch('/api/admin/invoices', {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id }),
-                    });
-
-                    if (!res.ok) {
-                        throw new Error(await getResponseError(res, 'No se pudo eliminar la factura'));
-                    }
-
-                    showToast('Factura eliminada correctamente.', 'success');
-                    setTimeout(() => window.location.reload(), 600);
-                } catch (error: any) {
-                    showToast(getErrorMessage(error), 'error');
-                    button.disabled = false;
-                    button.innerHTML = originalHtml;
-                    // @ts-ignore
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
-                }
+                openDeleteModal(id, reference, button);
             });
+        });
+
+        confirmDelete.addEventListener('click', async () => {
+            if (!pendingDelete) return;
+
+            const { id, button } = pendingDelete;
+            const originalHtml = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4"></i>';
+            confirmDelete.disabled = true;
+            confirmDelete.textContent = 'Eliminando...';
+
+            try {
+                const res = await fetch('/api/admin/invoices', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id }),
+                });
+
+                if (!res.ok) {
+                    throw new Error(await getResponseError(res, 'No se pudo eliminar la factura'));
+                }
+
+                showToast('Factura eliminada correctamente.', 'success');
+                setTimeout(() => window.location.reload(), 600);
+            } catch (error: any) {
+                showToast(getErrorMessage(error), 'error');
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+                confirmDelete.disabled = false;
+                confirmDelete.textContent = 'Eliminar';
+                closeDeleteModal();
+                // @ts-ignore
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
         });
 
         form?.addEventListener('submit', async (event) => {
