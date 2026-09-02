@@ -14,8 +14,16 @@ function asText(value: unknown) {
 }
 
 function asAmount(value: unknown) {
-    const amount = Number(value);
+    const amount = Number(String(value || '').replace(',', '.'));
     return Number.isFinite(amount) ? Math.round(amount * 100) / 100 : 0;
+}
+
+function asDate(value: unknown) {
+    const raw = asText(value);
+    if (!raw) return new Date();
+    return /^\d{4}-\d{2}-\d{2}$/.test(raw)
+        ? new Date(`${raw}T12:00:00`)
+        : new Date(raw);
 }
 
 export const GET: APIRoute = async () => {
@@ -44,7 +52,7 @@ export const POST: APIRoute = async ({ request }) => {
         const clientAddress = asText(body.client_address);
         const concept = asText(body.concept);
         const paymentMethod = asText(body.payment_method) || 'Transferencia bancaria';
-        const issuedAt = body.issued_at ? new Date(body.issued_at) : new Date();
+        const issuedAt = asDate(body.issued_at);
         const amount = asAmount(body.amount);
 
         if (!clientName || !concept || amount <= 0) {

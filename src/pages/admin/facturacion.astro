@@ -302,6 +302,21 @@ const getStatusLabel = (status: string) => {
                 : 'rounded-lg text-sm font-medium bg-rose-500/10 text-rose-300 border border-rose-500/20';
         }
 
+        function getErrorMessage(error: any) {
+            const message = String(error?.message || '').trim();
+            if (/failed to fetch|networkerror|load failed/i.test(message)) {
+                return 'No se pudo conectar con el servidor. Revisa la conexion o inicia sesion de nuevo antes de crear la factura.';
+            }
+            return message || 'Error al crear la factura';
+        }
+
+        async function getResponseError(res: Response) {
+            if (res.status === 401) return 'Tu sesion ha caducado. Inicia sesion de nuevo para crear la factura.';
+            if (res.status === 403) return 'No tienes permisos para crear facturas.';
+            const error = await res.json().catch(() => null);
+            return error?.error || 'No se pudo crear la factura';
+        }
+
         document.getElementById('btn-add-invoice')?.addEventListener('click', openModal);
         document.getElementById('modal-close')?.addEventListener('click', closeModal);
         document.getElementById('btn-cancel')?.addEventListener('click', closeModal);
@@ -320,14 +335,13 @@ const getStatusLabel = (status: string) => {
                 });
 
                 if (!res.ok) {
-                    const error = await res.json().catch(() => null);
-                    throw new Error(error?.error || 'No se pudo crear la factura');
+                    throw new Error(await getResponseError(res));
                 }
 
                 showStatus('Factura creada correctamente. Recargando listado...', 'success');
                 setTimeout(() => window.location.reload(), 700);
             } catch (error: any) {
-                showStatus(error?.message || 'Error al crear la factura', 'error');
+                showStatus(getErrorMessage(error), 'error');
                 saveButton.disabled = false;
                 saveButton.textContent = 'Crear factura';
             }
