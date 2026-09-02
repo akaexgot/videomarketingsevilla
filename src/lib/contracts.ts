@@ -52,6 +52,34 @@ export function formatInvoiceNumber(invoiceNumber: number) {
     return `${INVOICE_SERIES}-${invoiceNumber}`;
 }
 
+export async function getNextInvoiceNumber(supabase: any) {
+    const contractQuery = supabase
+        .from('contracts')
+        .select('invoice_number')
+        .not('invoice_number', 'is', null)
+        .order('invoice_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    const manualQuery = supabase
+        .from('manual_invoices')
+        .select('invoice_number')
+        .not('invoice_number', 'is', null)
+        .order('invoice_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    const [contractResult, manualResult] = await Promise.allSettled([contractQuery, manualQuery]);
+    const contractNumber = contractResult.status === 'fulfilled' && !contractResult.value.error
+        ? Number(contractResult.value.data?.invoice_number || 0)
+        : 0;
+    const manualNumber = manualResult.status === 'fulfilled' && !manualResult.value.error
+        ? Number(manualResult.value.data?.invoice_number || 0)
+        : 0;
+
+    return Math.max(contractNumber, manualNumber, INVOICE_START_NUMBER - 1) + 1;
+}
+
 export function calculateSpanishVatFromGross(total: number, vatRate = INVOICE_VAT_RATE) {
     const gross = Math.round(Number(total || 0) * 100) / 100;
     const taxableBase = Math.round((gross / (1 + vatRate)) * 100) / 100;
@@ -374,7 +402,8 @@ interface InvoicePdfInput {
     clientAddress: string;
     concept: string;
     amount: number;
-    contractId: string;
+    contractId?: string;
+    paymentMethod?: string;
 }
 
 /**
@@ -399,6 +428,8 @@ export async function generateInvoicePDF(input: InvoicePdfInput) {
     const invoiceRef = formatInvoiceNumber(input.invoiceNumber);
     const vat = calculateSpanishVatFromGross(input.amount);
     const vatPercent = `${Math.round(vat.vatRate * 100)}%`;
+    const concept = input.concept || INVOICE_FIXED_CONCEPT;
+    const paymentMethod = input.paymentMethod || 'Stripe / tarjeta bancaria';
 
     page.drawText('FACTURA', { x: margin, y: height - 72, size: 30, font: fontBold, color: dark });
     page.drawText(`Numero: ${invoiceRef}`, { x: margin, y: height - 100, size: 12, font: fontBold, color: carmin });
@@ -424,12 +455,14 @@ export async function generateInvoicePDF(input: InvoicePdfInput) {
     });
 
     y = height - 207;
-    [
+    const buyerLines = [
         input.clientName,
         `CIF/NIF: ${input.clientCif}`,
         input.clientAddress,
-        `Contrato: ${input.contractId}`,
-    ].forEach((line) => {
+        input.contractId ? `Contrato: ${input.contractId}` : null,
+    ].filter((line): line is string => Boolean(line));
+
+    buyerLines.forEach((line) => {
         page.drawText(line || '-', { x: buyerX, y, size: 9, font: fontMain, color: dark, maxWidth: 235 });
         y -= 15;
     });
@@ -446,7 +479,7 @@ export async function generateInvoicePDF(input: InvoicePdfInput) {
     page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 1, color: lightLine });
     y -= 28;
 
-    page.drawText(INVOICE_FIXED_CONCEPT, {
+    page.drawText(concept, {
         x: margin,
         y,
         size: 10,
@@ -472,7 +505,7 @@ export async function generateInvoicePDF(input: InvoicePdfInput) {
     page.drawText(formatEuro(vat.total), { x: width - margin - 95, y, size: 12, font: fontBold, color: carmin });
 
     y -= 45;
-    page.drawText('Forma de pago: Stripe / tarjeta bancaria.', {
+    page.drawText(`Forma de pago: ${paymentMethod}.`, {
         x: margin,
         y,
         size: 9,

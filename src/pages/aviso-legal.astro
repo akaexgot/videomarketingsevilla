@@ -1,8 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getSettings } from "../lib/data";
+import { getMailtoHref } from "../lib/contact";
 
 const settings = await getSettings();
+const emailHref = getMailtoHref(settings.email);
 ---
 
 <BaseLayout
@@ -30,7 +32,7 @@ const settings = await getSettings();
                             >{settings.site_name}</strong
                         ><br />
                         Dirección: {settings.address}<br />
-                        Email: {settings.email}
+                        Email: <a href={emailHref}>{settings.email}</a>
                     </p>
 
                     <h2

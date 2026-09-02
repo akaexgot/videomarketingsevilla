@@ -8,11 +8,14 @@ import {
     getSettings,
     getFooterData,
 } from "../../lib/data";
+import { getMailtoHref, getTelHref } from "../../lib/contact";
 
 const navigation = await getNavigation();
 const services = await getServices();
 const settings = await getSettings();
 const footerData = await getFooterData();
+const emailHref = getMailtoHref(settings.email);
+const phoneHref = getTelHref(settings.phone);
 ---
 
 <section id="site-footer" class="footer-screen">
@@ -79,8 +82,8 @@ const footerData = await getFooterData();
                         <div class="f-info-col">
                             <p class="f-section-label">Contacto</p>
                             <div class="f-info-items">
-                                <a href={`mailto:${settings.email}`} class="f-info-link">{settings.email}</a>
-                                <a href={`tel:${settings.phone}`} data-ga-event="phone_click" data-ga-method="phone" class="f-info-link">{settings.phone}</a>
+                                {settings.email && <a href={emailHref} class="f-info-link">{settings.email}</a>}
+                                {settings.phone && <a href={phoneHref} data-ga-event="phone_click" data-ga-method="phone" class="f-info-link">{settings.phone}</a>}
                                 <span class="f-info-muted">{settings.address}</span>
                             </div>
                         </div>

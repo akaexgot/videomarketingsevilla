@@ -1,8 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getSettings } from "../lib/data";
+import { getMailtoHref } from "../lib/contact";
 
 const settings = await getSettings();
+const emailHref = getMailtoHref(settings.email);
 ---
 
 <BaseLayout
@@ -71,7 +73,7 @@ const settings = await getSettings();
                     <p>
                         Puedes ejercer tus derechos de acceso, rectificación,
                         supresión, oposición y portabilidad enviando un email a
-                        {settings.email}
+                        <a href={emailHref}>{settings.email}</a>
                     </p>
 
                     <h2

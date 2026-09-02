@@ -180,7 +180,6 @@ const needsSwiper = carta.tipo === 'imagenes' || carta.tipo === 'pdf' || carta.t
 
             {sampleVideoEmbeds.length > 0 && (
                 <section class="carta-sample-videos" aria-label="Vídeos de ejemplo">
-                    <h2 class="carta-sample-videos__title">Vídeos de ejemplo</h2>
                     <div class={`carta-sample-videos__grid carta-sample-videos__grid--count-${sampleVideoEmbeds.length}`}>
                         {sampleVideoEmbeds.map((video: any, idx: number) => (
                             <div class={`carta-sample-video carta-sample-video--${video.orientation}`}>

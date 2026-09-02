@@ -6,6 +6,7 @@
 import { getSettings } from "../../lib/data";
 import { optimizeCloudinaryVideo } from "../../lib/cloudinary";
 import { getVideoId } from "../../lib/display";
+import { getWhatsappHref } from "../../lib/contact";
 import "../../styles/contacto.css";
 const settings = await getSettings();
 
@@ -50,7 +51,7 @@ const heroSources = {
 const defaultTitle = 'Creamos\n**historias** que\nimpulsan\nmarcas';
 const titleLines = (settings.hero_title || defaultTitle).split('\n');
 const heroSubtitle = settings.hero_subtitle || '';
-const whatsappHref = `https://wa.me/${settings.whatsapp_number?.replace(/[^0-9]/g, '')}?text=Hola,%20me%20gustaria%20hablar%20sobre%20un%20proyecto%20audiovisual.`;
+const whatsappHref = getWhatsappHref(settings.whatsapp_number, "Hola, me gustaria hablar sobre un proyecto audiovisual.");
 ---
 
 <section
@@ -301,7 +302,7 @@ const whatsappHref = `https://wa.me/${settings.whatsapp_number?.replace(/[^0-9]/
                 target="_blank"
                 rel="noopener"
                 data-ga-event="whatsapp_click"
-                data-ga-method="hero_whatsapp"
+                data-ga-method="whatsapp"
                 class="hero-action hero-action--secondary"
             >
                 <span>WhatsApp directo</span>

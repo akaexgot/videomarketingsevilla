@@ -1,8 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getSettings } from "../lib/data";
+import { getMailtoHref } from "../lib/contact";
 
 const settings = await getSettings();
+const emailHref = getMailtoHref(settings.email);
 ---
 
 <BaseLayout
@@ -77,7 +79,7 @@ const settings = await getSettings();
                     </h2>
                     <p>
                         Para más información sobre nuestra política de cookies,
-                        puedes contactarnos en {settings.email}
+                        puedes contactarnos en <a href={emailHref}>{settings.email}</a>
                     </p>
                 </div>
             </div>

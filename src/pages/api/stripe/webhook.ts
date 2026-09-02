@@ -2,9 +2,9 @@ import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
 import { getServiceSupabase } from '../../../lib/supabase';
 import {
-    INVOICE_START_NUMBER,
     generateContractPDF,
     generateInvoicePDF,
+    getNextInvoiceNumber,
     replacePlaceholders,
 } from '../../../lib/contracts';
 import { sendContractCompletedOwnerEmail, sendContractFinalizedEmail } from '../../../lib/resend';
@@ -17,19 +17,6 @@ const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY || '', {
 const endpointSecret = import.meta.env.STRIPE_WEBHOOK_SECRET;
 
 type SupabaseService = NonNullable<ReturnType<typeof getServiceSupabase>>;
-
-async function getNextInvoiceNumber(supabase: SupabaseService) {
-    const { data, error } = await supabase
-        .from('contracts')
-        .select('invoice_number')
-        .not('invoice_number', 'is', null)
-        .order('invoice_number', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-    if (error || !data?.invoice_number) return INVOICE_START_NUMBER;
-    return Math.max(Number(data.invoice_number) + 1, INVOICE_START_NUMBER);
-}
 
 function getPaymentIntentId(session: Stripe.Checkout.Session) {
     if (!session.payment_intent) return null;

@@ -1,0 +1,339 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { getServiceSupabase } from "../../lib/supabase";
+import { formatInvoiceNumber } from "../../lib/contracts";
+
+const supabase = getServiceSupabase();
+
+type InvoiceRow = {
+    id: string;
+    source: 'contract' | 'manual';
+    number: number;
+    reference: string;
+    client: string;
+    email: string;
+    concept: string;
+    amount: number;
+    status: string;
+    issuedAt: string;
+    url: string;
+};
+
+let invoices: InvoiceRow[] = [];
+let manualTableMissing = false;
+
+if (supabase) {
+    const { data: contractInvoices } = await supabase
+        .from('contracts')
+        .select('id, invoice_number, invoice_url, invoice_issued_at, amount_to_pay, client_email, client_data, admin_data, payment_status')
+        .not('invoice_number', 'is', null)
+        .order('invoice_issued_at', { ascending: false });
+
+    const { data: manualInvoices, error: manualError } = await supabase
+        .from('manual_invoices')
+        .select('*')
+        .order('issued_at', { ascending: false });
+
+    if (manualError) manualTableMissing = true;
+
+    invoices = [
+        ...(contractInvoices || []).map((invoice: any) => ({
+            id: invoice.id,
+            source: 'contract' as const,
+            number: Number(invoice.invoice_number),
+            reference: formatInvoiceNumber(Number(invoice.invoice_number)),
+            client: invoice.client_data?.CLIENTE_NOMBRE_FISCAL || invoice.client_data?.NOMBRE || invoice.client_email || 'Cliente sin identificar',
+            email: invoice.client_email || '',
+            concept: invoice.admin_data?.SERVICIO || 'Prestacion de servicios audiovisuales',
+            amount: Number(invoice.amount_to_pay || 0),
+            status: invoice.payment_status === 'paid' ? 'paid' : 'issued',
+            issuedAt: invoice.invoice_issued_at,
+            url: invoice.invoice_url || '',
+        })),
+        ...(!manualError ? (manualInvoices || []).map((invoice: any) => ({
+            id: invoice.id,
+            source: 'manual' as const,
+            number: Number(invoice.invoice_number),
+            reference: formatInvoiceNumber(Number(invoice.invoice_number)),
+            client: invoice.client_name || 'Cliente sin identificar',
+            email: invoice.client_email || '',
+            concept: invoice.concept || '',
+            amount: Number(invoice.amount || 0),
+            status: invoice.status || 'issued',
+            issuedAt: invoice.issued_at,
+            url: invoice.invoice_url || '',
+        })) : []),
+    ].sort((a, b) => new Date(b.issuedAt || 0).getTime() - new Date(a.issuedAt || 0).getTime());
+}
+
+const formatDate = (value: string) => value
+    ? new Date(value).toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' })
+    : '-';
+
+const formatEuro = (value: number) => `${value.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EUR`;
+
+const getSourceLabel = (source: InvoiceRow['source']) => source === 'manual' ? 'Manual' : 'Contrato';
+const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+        draft: 'Borrador',
+        issued: 'Emitida',
+        paid: 'Pagada',
+        cancelled: 'Anulada',
+    };
+    return labels[status] || status;
+};
+---
+
+<AdminLayout title="Facturacion" activeSection="facturacion">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+        <div>
+            <nav class="flex text-zinc-500 text-xs" aria-label="Breadcrumb" style="margin-bottom: 0.75rem;">
+                <ol class="list-none p-0 inline-flex">
+                    <li class="flex items-center">
+                        <span class="hover:text-rose-500 transition-colors">Comunicacion</span>
+                        <i data-lucide="chevron-right" class="w-3 h-3 mx-2"></i>
+                    </li>
+                    <li class="text-zinc-300">Facturacion</li>
+                </ol>
+            </nav>
+            <h1 class="text-2xl font-bold text-white tracking-tight">Facturacion</h1>
+            <p class="text-zinc-400 text-sm" style="margin-top: 0.75rem;">Consulta facturas emitidas automaticamente por contratos y crea facturas manuales.</p>
+        </div>
+        <button id="btn-add-invoice" class="inline-flex items-center justify-center bg-rose-600 text-white text-sm font-medium rounded-md hover:bg-rose-500 transition-colors shadow-sm" style="padding: 0.5rem 1rem; gap: 0.5rem;">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            Nueva factura
+        </button>
+    </div>
+
+    {manualTableMissing && (
+        <div class="bg-amber-500/10 border border-amber-500/20 text-amber-200 rounded-xl mb-6" style="padding: 1rem 1.25rem;">
+            La tabla de facturas manuales aun no existe en Supabase. Ejecuta la migracion <code>supabase/migration_manual_invoices.sql</code> para activar la creacion de facturas manuales.
+        </div>
+    )}
+
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl mb-6" style="padding: 1rem;">
+        <div class="grid grid-cols-1 md:grid-cols-[1fr_180px_180px_180px] gap-3">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="w-4 h-4 text-zinc-500"></i>
+                </div>
+                <input id="invoice-search" type="text" placeholder="Buscar por numero, cliente, email o concepto..." class="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-3 pl-10 pr-4 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-rose-500" />
+            </div>
+            <select id="invoice-source" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg text-sm text-zinc-100 focus:outline-none focus:border-rose-500">
+                <option value="">Todos</option>
+                <option value="manual">Manual</option>
+                <option value="contract">Contrato</option>
+            </select>
+            <input id="invoice-from" type="date" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg text-sm text-zinc-100 focus:outline-none focus:border-rose-500" />
+            <input id="invoice-to" type="date" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg text-sm text-zinc-100 focus:outline-none focus:border-rose-500" />
+        </div>
+    </div>
+
+    {invoices.length > 0 ? (
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-zinc-500 uppercase tracking-wider font-semibold bg-zinc-900/50">
+                        <tr class="border-b border-zinc-800/50">
+                            <th style="padding: 1.25rem 1.5rem;">Factura</th>
+                            <th style="padding: 1.25rem 1.5rem;">Cliente</th>
+                            <th style="padding: 1.25rem 1.5rem;">Concepto</th>
+                            <th style="padding: 1.25rem 1.5rem;">Fecha</th>
+                            <th style="padding: 1.25rem 1.5rem;">Importe</th>
+                            <th class="text-right" style="padding: 1.25rem 1.5rem;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-800">
+                        {invoices.map((invoice) => (
+                            <tr
+                                class="invoice-row hover:bg-zinc-800/30 transition-colors"
+                                data-search={`${invoice.reference} ${invoice.client} ${invoice.email} ${invoice.concept}`.toLowerCase()}
+                                data-source={invoice.source}
+                                data-issued={invoice.issuedAt ? invoice.issuedAt.slice(0, 10) : ''}
+                            >
+                                <td style="padding: 1.25rem 1.5rem;">
+                                    <div class="font-mono font-semibold text-zinc-100">{invoice.reference}</div>
+                                    <div class="text-xs text-zinc-500">{getSourceLabel(invoice.source)} · {getStatusLabel(invoice.status)}</div>
+                                </td>
+                                <td style="padding: 1.25rem 1.5rem;">
+                                    <div class="font-medium text-zinc-100">{invoice.client}</div>
+                                    {invoice.email && <div class="text-xs text-zinc-500">{invoice.email}</div>}
+                                </td>
+                                <td style="padding: 1.25rem 1.5rem;" class="text-zinc-300 max-w-md">{invoice.concept}</td>
+                                <td style="padding: 1.25rem 1.5rem;" class="text-zinc-300">{formatDate(invoice.issuedAt)}</td>
+                                <td style="padding: 1.25rem 1.5rem;" class="font-mono text-zinc-100">{formatEuro(invoice.amount)}</td>
+                                <td class="text-right" style="padding: 1.25rem 1.5rem;">
+                                    <div class="flex items-center justify-end gap-2">
+                                        {invoice.url && (
+                                            <a href={invoice.url} target="_blank" class="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all border border-transparent hover:border-blue-500/20" title="Descargar factura">
+                                                <i data-lucide="download" class="w-4 h-4"></i>
+                                            </a>
+                                        )}
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    ) : (
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl py-24 px-6 flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 bg-zinc-950 border border-zinc-800 rounded-full flex items-center justify-center mb-6">
+                <i data-lucide="receipt" class="w-8 h-8 text-zinc-700"></i>
+            </div>
+            <h3 class="text-zinc-100 font-semibold mb-2 text-lg">No hay facturas emitidas</h3>
+            <p class="text-zinc-500 text-sm max-w-sm leading-relaxed">Las facturas de contratos pagados y las facturas manuales apareceran aqui.</p>
+        </div>
+    )}
+
+    <div id="modal-invoice" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="flex items-center justify-between border-b border-zinc-800" style="padding: 1rem 1.5rem;">
+                <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                    <i data-lucide="receipt" class="w-5 h-5 text-rose-500"></i>
+                    Nueva factura manual
+                </h3>
+                <button id="modal-close" class="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="form-invoice" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Cliente / razon social *</label>
+                        <input name="client_name" type="text" required class="w-full bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">NIF / DNI / CIF</label>
+                        <input name="client_cif" type="text" class="w-full bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Email</label>
+                        <input name="client_email" type="email" class="w-full bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Telefono</label>
+                        <input name="client_phone" type="tel" class="w-full bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 text-sm" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Direccion fiscal</label>
+                        <input name="client_address" type="text" class="w-full bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 text-sm" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Concepto *</label>
+                        <textarea name="concept" rows="3" required class="w-full bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 text-sm" placeholder="Ej: Produccion de video corporativo"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Importe total con IVA *</label>
+                        <input name="amount" type="number" min="0.01" step="0.01" required class="w-full bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Fecha de emision</label>
+                        <input name="issued_at" type="date" class="w-full bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 text-sm" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-zinc-300 mb-2">Forma de pago</label>
+                        <input name="payment_method" type="text" value="Transferencia bancaria" class="w-full bg-zinc-950 border border-zinc-800 rounded-md text-zinc-100 text-sm" />
+                    </div>
+                </div>
+
+                <div id="invoice-status" class="hidden rounded-lg text-sm font-medium" style="padding: 0.75rem 1rem;"></div>
+
+                <div class="pt-4 border-t border-zinc-800 flex justify-end gap-3">
+                    <button type="button" id="btn-cancel" class="px-4 py-2 text-zinc-400 text-sm font-medium hover:text-white transition-colors">Cancelar</button>
+                    <button type="submit" id="btn-save-invoice" class="px-5 py-2 bg-rose-600 text-white text-sm font-semibold rounded-lg hover:bg-rose-500 shadow-glow transition-all">Crear factura</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</AdminLayout>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('modal-invoice')!;
+        const form = document.getElementById('form-invoice') as HTMLFormElement;
+        const status = document.getElementById('invoice-status')!;
+        const saveButton = document.getElementById('btn-save-invoice') as HTMLButtonElement;
+        const searchInput = document.getElementById('invoice-search') as HTMLInputElement;
+        const sourceFilter = document.getElementById('invoice-source') as HTMLSelectElement;
+        const fromInput = document.getElementById('invoice-from') as HTMLInputElement;
+        const toInput = document.getElementById('invoice-to') as HTMLInputElement;
+
+        function filterRows() {
+            const query = searchInput.value.trim().toLowerCase();
+            const source = sourceFilter.value;
+            const from = fromInput.value;
+            const to = toInput.value;
+
+            document.querySelectorAll<HTMLElement>('.invoice-row').forEach((row) => {
+                const matchesSearch = !query || (row.dataset.search || '').includes(query);
+                const matchesSource = !source || row.dataset.source === source;
+                const issued = row.dataset.issued || '';
+                const matchesFrom = !from || issued >= from;
+                const matchesTo = !to || issued <= to;
+                row.classList.toggle('hidden', !(matchesSearch && matchesSource && matchesFrom && matchesTo));
+            });
+        }
+
+        [searchInput, sourceFilter, fromInput, toInput].forEach((control) => {
+            control?.addEventListener('input', filterRows);
+            control?.addEventListener('change', filterRows);
+        });
+
+        function openModal() {
+            status.className = 'hidden';
+            status.textContent = '';
+            const issuedAt = form.elements.namedItem('issued_at') as HTMLInputElement | null;
+            if (issuedAt && !issuedAt.value) issuedAt.value = new Date().toISOString().slice(0, 10);
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            form.reset();
+        }
+
+        function showStatus(message: string, type: 'success' | 'error') {
+            status.textContent = message;
+            status.className = type === 'success'
+                ? 'rounded-lg text-sm font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                : 'rounded-lg text-sm font-medium bg-rose-500/10 text-rose-300 border border-rose-500/20';
+        }
+
+        document.getElementById('btn-add-invoice')?.addEventListener('click', openModal);
+        document.getElementById('modal-close')?.addEventListener('click', closeModal);
+        document.getElementById('btn-cancel')?.addEventListener('click', closeModal);
+
+        form?.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            saveButton.disabled = true;
+            saveButton.textContent = 'Creando...';
+
+            try {
+                const payload = Object.fromEntries(new FormData(form));
+                const res = await fetch('/api/admin/invoices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!res.ok) {
+                    const error = await res.json().catch(() => null);
+                    throw new Error(error?.error || 'No se pudo crear la factura');
+                }
+
+                showStatus('Factura creada correctamente. Recargando listado...', 'success');
+                setTimeout(() => window.location.reload(), 700);
+            } catch (error: any) {
+                showStatus(error?.message || 'Error al crear la factura', 'error');
+                saveButton.disabled = false;
+                saveButton.textContent = 'Crear factura';
+            }
+        });
+
+        // @ts-ignore
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+</script>
